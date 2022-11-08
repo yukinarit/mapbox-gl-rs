@@ -1,0 +1,28 @@
+[package]
+name = "mapboxgl"
+version = "0.0.1"
+edition = "2021"
+description = "Unofficial Rust binding for mapbox-gl-js"
+readme = "README.md"
+homepage = "https://github.com/yukinarit/mapbox-gl-rs"
+repository = "https://github.com/yukinarit/mapbox-gl-rs"
+license-file = "LICENSE"
+keywords = ["map", "mapbox", "mapbox-gl", "vector-tiles", "wasm"]
+categories = ["WebAssembly", "Web programming"]
+exclude = [
+	"node_modules",
+	"package.json",
+	"package-lock.json",
+]
+
+[dependencies]
+wasm-bindgen = "0.2"
+web-sys = { version = "0.3", features = ["console", "MouseEvent", "TouchEvent", "WheelEvent", "DragEvent", "HtmlElement"] }
+js-sys = "0.3"
+serde = { version = "1.0", features = ["derive"] }
+serde-wasm-bindgen = "0.4"
+serde_json = "1"
+anyhow = "1"
+log = "0.4.6"
+geojson = "0.24"
+enclose = "1"
