@@ -1,6 +1,18 @@
 <h1 align="center">mapbox-gl-rs</h1>
 <p align="center">Unofficial Rust binding for <a href="https://github.com/mapbox/mapbox-gl-js">mapbox-gl-js</a></p>
-<p align="center"><img src="logo.svg" style="width:80px"/></p>
+<p align="center">
+  <a href="https://crates.io/crates/mapboxgl">
+    <img alt="Crates.io" src="https://img.shields.io/crates/v/mapboxgl.svg">
+  </a>
+  <a href="https://docs.rs/mapboxgl">
+    <img alt="Docs.rs" src="https://img.shields.io/badge/docs.rs-mapboxgl-blue">
+  </a>
+  <a href="https://github.com/yukinarit/mapbox-gl-rs/actions/workflows/test.yml">
+    <img alt="GithubActions" src="https://github.com/yukinarit/mapbox-gl-rs/actions/workflows/test.yml/badge.svg">
+  </a>
+</p>
+
+<p align="center"><img src="https://raw.githubusercontent.com/yukinarit/mapbox-gl-rs/main/logo.svg" style="width:80px"/></p>
 
 ## What's this?
 
@@ -12,7 +24,7 @@
 
 [wasm-bindgen](https://rustwasm.github.io/wasm-bindgen/) provides a Rust library and tool to compile Rust code into WebAssembly, which allows Rust based application e.g. [egui](https://www.egui.rs/#demo) and [RustPython](https://rustpython.github.io/) to run on web browsers. Most of the people don't know that `wasm-bindgen` also allows to invoke JavaScript code from Rust. This project leverages this feature to provide a Rust binding for `mapbox-gl-js`.
 
-<p align="center"><img src="how-it-works.svg"/></p>
+<p align="center"><img src="https://raw.githubusercontent.com/yukinarit/mapbox-gl-rs/main/how-it-works.svg"/></p>
 
 ## Supported features
 
@@ -47,7 +59,7 @@
 * Sources
     * [ ] [CanvasSource](https://docs.mapbox.com/mapbox-gl-js/api/sources/#canvassource)
     * [ ] [CanvasSourceOptions](https://docs.mapbox.com/mapbox-gl-js/api/sources/#canvassourceoptions)
-    * [ ] [GeoJsonSource](https://docs.mapbox.com/mapbox-gl-js/api/sources/#geojsonsource)
+    * [x] [GeoJsonSource](https://docs.mapbox.com/mapbox-gl-js/api/sources/#geojsonsource)
     * [ ] [ImageSource](https://docs.mapbox.com/mapbox-gl-js/api/sources/#imagesource)
     * [ ] [VectorTileSource](https://docs.mapbox.com/mapbox-gl-js/api/sources/#vectortilesource)
     * [ ] [VideoSource](https://docs.mapbox.com/mapbox-gl-js/api/sources/#videosource)
@@ -60,10 +72,9 @@
 
 ## Examples
 
+[![](https://raw.githubusercontent.com/yukinarit/mapbox-gl-rs/main/set-data.gif)](https://github.com/yukinarit/mapbox-gl-rs/tree/main/examples/set-data)
 
-[![](set-data.gif)](https://github.com/yukinarit/mapbox-gl-rs/tree/main/examples/set-data)
-
-[![](popup.gif)](https://github.com/yukinarit/mapbox-gl-rs/tree/main/examples/popup.gif)
+[![](https://raw.githubusercontent.com/yukinarit/mapbox-gl-rs/main/popup.gif)](https://github.com/yukinarit/mapbox-gl-rs/tree/main/examples/popup)
 
 ## License
 
