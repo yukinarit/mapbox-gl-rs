@@ -25,7 +25,7 @@ pub use marker::{Marker, MarkerOptions};
 pub use popup::{Popup, PopupOptions};
 pub use source::GeoJsonSource;
 
-const DEFAULT_STYLE: &'static str = "mapbox://styles/mapbox/streets-v11";
+const DEFAULT_STYLE: &str = "mapbox://styles/mapbox/streets-v11";
 
 #[wasm_bindgen]
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -95,7 +95,7 @@ impl MapOptions {
     #[wasm_bindgen(constructor)]
     pub fn new(access_token: String, container: String) -> MapOptions {
         MapOptions {
-            access_token: access_token,
+            access_token,
             antialias: None,
             attribution_control: None,
             bearing: None,
@@ -103,7 +103,7 @@ impl MapOptions {
             center: None,
             click_tolerance: None,
             collect_resource_timing: None,
-            container: container,
+            container,
             cooperative_gestures: None,
             cross_source_collisions: None,
             custom_attribution: None,
@@ -537,7 +537,7 @@ impl Map {
         data: geojson::GeoJson,
     ) -> anyhow::Result<()> {
         let ser = serde_wasm_bindgen::Serializer::new().serialize_maps_as_objects(true);
-        let data = (&source::GeoJsonSourceSpec::new(data))
+        let data = source::GeoJsonSourceSpec::new(data)
             .serialize(&ser)
             .map_err(|_| anyhow::anyhow!("Failed to convert GeoJson"))?;
 
