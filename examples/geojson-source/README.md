@@ -1,18 +1,13 @@
 ## Run
 
-* Build app
+* Run app
 ```
-npm run build
+trunk serve
 ```
 
 * If you have a [Mapbox token](https://account.mapbox.com/access-tokens), specify when building
 ```
-MAPBOX_TOKEN={YOUR_TOKEN} npm run build
+MAPBOX_TOKEN={YOUR_TOKEN} trunk serve
 ```
 
-* Run HTTP server
-```
-python3 -m http.server --directory app
-```
-
-Open http://localhost:8000 in your browser
+Open http://localhost:8080 in your browser

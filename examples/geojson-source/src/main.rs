@@ -1,49 +1,24 @@
+use futures::channel::oneshot;
 use log::*;
-use mapboxgl::{
-    event, layer, LatLng, Layer, Map, MapEventListner, MapFactory, MapOptions, Popup, PopupOptions,
-};
+use mapboxgl::{event, layer, LatLng, Layer, Map, MapEventListner, MapFactory, MapOptions};
+use std::borrow::BorrowMut;
+use std::{cell::RefCell, rc::Rc};
 use yew::prelude::*;
+use yew::{use_effect_with_deps, use_mut_ref};
 
-enum Msg {}
-
-struct Model {
-    map: Option<MapFactory>,
+struct Listner {
+    tx: Option<oneshot::Sender<()>>,
 }
-
-impl Component for Model {
-    type Message = Msg;
-    type Properties = ();
-
-    fn create(_ctx: &Context<Self>) -> Self {
-        Self { map: None }
-    }
-
-    fn update(&mut self, _ctx: &Context<Self>, _msg: Self::Message) -> bool {
-        false
-    }
-
-    fn view(&self, _ctx: &Context<Self>) -> Html {
-        html! {
-          <div id="map" style="width: 100vw; height: 100vh;"></div>
-        }
-    }
-
-    fn rendered(&mut self, _ctx: &Context<Self>, first_render: bool) {
-        if first_render && self.map.is_none() {
-            self.load_map();
-        }
-    }
-}
-
-struct Listner {}
 
 impl MapEventListner for Listner {
     fn on_load(&mut self, map: &Map, _e: event::MapBaseEvent) {
+        self.tx.take().unwrap().send(()).unwrap();
+
         use geojson::{Feature, GeoJson, Geometry, Value};
 
         map.add_geojson_source(
             "route",
-            Feature {
+            GeoJson::Feature(Feature {
                 bbox: None,
                 geometry: Some(Geometry::new(Value::LineString(vec![
                     vec![-122.483696, 37.833818],
@@ -71,8 +46,9 @@ impl MapEventListner for Listner {
                 id: None,
                 properties: None,
                 foreign_members: None,
-            },
-        );
+            }),
+        )
+        .unwrap();
 
         map.add_layer(&Layer {
             id: "route".into(),
@@ -86,27 +62,62 @@ impl MapEventListner for Listner {
                 line_color: "#888".into(),
                 line_width: 8,
             }),
-        });
+        })
+        .unwrap();
     }
 }
 
-impl Model {
-    pub fn load_map(&mut self) {
-        let token = std::option_env!("MAPBOX_TOKEN")
-            .unwrap_or("pk.eyJ1IjoieXVraW5hcml0IiwiYSI6ImNsYTdncnVsZDBuYTgzdmxkanhqanZwdnoifQ.m3FLgX5Elx1fUIyyn7dZYg");
-        let opts = MapOptions::new(token.into(), "map".into())
-            .center(LatLng {
-                lat: 37.830348,
-                lng: -122.486052,
-            })
-            .zoom(15.0);
-        let mut factory = mapboxgl::MapFactory::new(opts).unwrap();
-        factory.set_listener(Listner {});
-        self.map = Some(factory);
+fn use_map() -> Rc<RefCell<Option<MapFactory>>> {
+    let map = use_mut_ref(|| Option::<MapFactory>::None);
+
+    {
+        let mut map = map.clone();
+        use_effect_with_deps(
+            move |_| {
+                let mut m = create_map();
+
+                let (tx, rx) = oneshot::channel();
+                m.set_listener(Listner { tx: Some(tx) });
+
+                wasm_bindgen_futures::spawn_local(async move {
+                    rx.await.unwrap();
+                    info!("map loaded");
+                    map.borrow_mut().replace(Some(m));
+                });
+
+                || {}
+            },
+            (),
+        );
     }
+
+    map
+}
+
+#[function_component(App)]
+fn app() -> Html {
+    let _map = use_map();
+
+    html! {
+      <div id="map" style="width: 100vw; height: 100vh;"></div>
+    }
+}
+
+pub fn create_map() -> MapFactory {
+    let token = std::option_env!("MAPBOX_TOKEN")
+        .unwrap_or("pk.eyJ1IjoieXVraW5hcml0IiwiYSI6ImNsYTdncnVsZDBuYTgzdmxkanhqanZwdnoifQ.m3FLgX5Elx1fUIyyn7dZYg");
+
+    let opts = MapOptions::new(token.into(), "map".into())
+        .center(LatLng {
+            lat: 37.830348,
+            lng: -122.486052,
+        })
+        .zoom(15.0);
+
+    mapboxgl::MapFactory::new(opts).unwrap()
 }
 
 fn main() {
     wasm_logger::init(wasm_logger::Config::default());
-    yew::start_app::<Model>();
+    yew::start_app::<App>();
 }

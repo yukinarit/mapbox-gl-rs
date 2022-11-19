@@ -1,10 +1,10 @@
 use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen(module = "/mapbox-gl.js")]
+#[wasm_bindgen]
 extern "C" {
     pub type LngLatLike;
 
-    #[wasm_bindgen(constructor)]
+    #[wasm_bindgen(constructor, js_namespace = mapboxgl)]
     pub fn new(lng: f64, lat: f64) -> LngLatLike;
 
     #[wasm_bindgen(method, getter)]
@@ -21,7 +21,7 @@ extern "C" {
 
     pub type LngLatBounds;
 
-    #[wasm_bindgen(constructor)]
+    #[wasm_bindgen(constructor, js_namespace = mapboxgl)]
     pub fn new(sw: LngLatLike, ne: LngLatLike) -> LngLatBounds;
 
     #[wasm_bindgen(method, getter)]
@@ -35,7 +35,7 @@ extern "C" {
     ///
     pub type Map;
 
-    #[wasm_bindgen(constructor)]
+    #[wasm_bindgen(constructor, js_namespace = mapboxgl)]
     pub fn new(options: JsValue) -> Map;
 
     #[wasm_bindgen(method)]
@@ -119,7 +119,7 @@ extern "C" {
     ///
     pub type BoxZoomHandler;
 
-    #[wasm_bindgen(constructor)]
+    #[wasm_bindgen(constructor, js_namespace = mapboxgl)]
     pub fn BoxZoomHandler_new(map: &Map, options: JsValue) -> BoxZoomHandler;
 
     #[wasm_bindgen(method, js_name=enable)]
@@ -145,7 +145,7 @@ extern "C" {
     ///
     pub type Marker;
 
-    #[wasm_bindgen(constructor)]
+    #[wasm_bindgen(constructor, js_namespace = mapboxgl)]
     pub fn maker_new(options: JsValue) -> Marker;
 
     #[wasm_bindgen(method)]
@@ -162,7 +162,7 @@ extern "C" {
     ///
     pub type Popup;
 
-    #[wasm_bindgen(constructor)]
+    #[wasm_bindgen(constructor, js_namespace = mapboxgl)]
     pub fn Popup_new(options: JsValue) -> Popup;
 
     #[wasm_bindgen(method, js_name=setHTML)]

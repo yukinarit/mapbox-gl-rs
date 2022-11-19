@@ -11,3 +11,5 @@ mapboxgl = { path = "../../" }
 log = "0.4.6"
 wasm-logger = "0.2.0"
 wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+futures = "0.3"

@@ -26,6 +26,24 @@
 
 <p align="center"><img src="https://raw.githubusercontent.com/yukinarit/mapbox-gl-rs/main/how-it-works.svg"/></p>
 
+## Usage
+
+Add `mapboxgl` to your Cargo.toml
+```toml
+mapboxgl = "0.1.0"
+```
+
+Add the following CSS and JavaScript snippet in html, so that mapboxgl JavaScript module is loaded.
+```html
+<link href='https://api.mapbox.com/mapbox-gl-js/v2.10.0/mapbox-gl.css' rel='stylesheet' />
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.10.0/mapbox-gl.js"></script>
+```
+
+Build and run your app. If you are a [Yew](https://github.com/yewstack/yew) user, the following command will build and start a web server automatically
+```
+trunk serve
+```
+
 ## Supported features
 
 * Map
