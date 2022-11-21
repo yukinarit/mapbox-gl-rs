@@ -28,10 +28,118 @@ pub use source::GeoJsonSource;
 const DEFAULT_STYLE: &str = "mapbox://styles/mapbox/streets-v11";
 
 #[wasm_bindgen]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct LatLng {
-    pub lat: f64,
-    pub lng: f64,
+#[derive(Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct LngLat {
+    #[serde(
+        serialize_with = "serialize_lnglat",
+        deserialize_with = "deserialize_lnglat"
+    )]
+    inner: js::LngLat,
+}
+
+impl std::fmt::Debug for LngLat {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("LngLat")
+            .field("lng", &self.inner.lng())
+            .field("lat", &self.inner.lat())
+            .finish()
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct LngLatValue {
+    lng: f64,
+    lat: f64,
+}
+
+fn serialize_lnglat<S>(lnglat: &js::LngLat, ser: S) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    let value = LngLatValue {
+        lng: lnglat.lng(),
+        lat: lnglat.lat(),
+    };
+
+    value.serialize(ser)
+}
+
+fn deserialize_lnglat<'de, D>(de: D) -> Result<js::LngLat, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let value = LngLatValue::deserialize(de)?;
+    Ok(js::LngLat::new(value.lng, value.lat))
+}
+
+impl LngLat {
+    pub fn new(lng: f64, lat: f64) -> LngLat {
+        LngLat {
+            inner: js::LngLat::new(lng, lat),
+        }
+    }
+
+    pub fn wrap(&self) -> LngLat {
+        let wrapped = self.inner.wrap();
+        LngLat { inner: wrapped }
+    }
+
+    pub fn to_array(&self) -> Vec<f64> {
+        self.inner.toArray()
+    }
+
+    pub fn distance_to(&self, lnglat: LngLat) -> f64 {
+        self.inner.distanceTo(&lnglat.inner)
+    }
+
+    pub fn to_bounds(&self, radius: f64) -> LngLatBounds {
+        let bbox = self.inner.toBounds(radius);
+        LngLatBounds { inner: bbox }
+    }
+}
+
+impl From<js::LngLat> for LngLat {
+    fn from(lnglat: js::LngLat) -> Self {
+        LngLat { inner: lnglat }
+    }
+}
+
+impl ToString for LngLat {
+    fn to_string(&self) -> String {
+        self.inner.toString()
+    }
+}
+
+#[wasm_bindgen]
+pub struct LngLatBounds {
+    inner: js::LngLatBounds,
+}
+
+impl LngLatBounds {
+    pub fn set_north_east(&self) -> LngLat {
+        LngLat {
+            inner: self.inner.getNorthEast(),
+        }
+    }
+
+    pub fn get_south_west(&self) -> LngLat {
+        LngLat {
+            inner: self.inner.getSouthWest(),
+        }
+    }
+
+    pub fn get_north_east(&self) -> LngLat {
+        LngLat {
+            inner: self.inner.getNorthEast(),
+        }
+    }
+
+    pub fn get_center(&self) -> LngLat {
+        LngLat {
+            inner: self.inner.getCenter(),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -56,7 +164,7 @@ pub struct MapOptions {
     #[serde(skip_serializing_if = "Option::is_none")]
     box_zoom: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    center: Option<LatLng>,
+    center: Option<LngLat>,
     #[serde(skip_serializing_if = "Option::is_none")]
     click_tolerance: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -129,7 +237,7 @@ impl MapOptions {
         self
     }
 
-    pub fn center(mut self, latlng: LatLng) -> MapOptions {
+    pub fn center(mut self, latlng: LngLat) -> MapOptions {
         self.center = Some(latlng);
         self
     }
@@ -380,7 +488,9 @@ pub struct Map {
 
 impl MapFactory {
     pub fn new(options: MapOptions) -> Result<MapFactory> {
-        let inner = crate::js::Map::new(options.build());
+        let options = options.build();
+
+        let inner = crate::js::Map::new(options);
 
         Ok(MapFactory {
             map: Arc::new(Map { inner }),
@@ -475,6 +585,11 @@ impl Map {
         self.inner.getContainer()
     }
 
+    pub fn get_bounds(&self) -> anyhow::Result<LngLatBounds> {
+        let bbox = self.inner.getBounds();
+        Ok(LngLatBounds { inner: bbox })
+    }
+
     pub fn get_min_zoom(&self) -> f64 {
         self.inner.getMinZoom()
     }
@@ -509,10 +624,7 @@ impl Map {
 
     pub fn get_box_zoom_handler(&self) -> Option<handler::BoxZoomHandler> {
         let value = self.inner.get_handler(&HandlerType::BoxZoom.to_string());
-        web_sys::console::log_2(&JsValue::from("Get BoxZoomHandler: "), &value);
-
         let inner: js::BoxZoomHandler = value.unchecked_into();
-        web_sys::console::log_1(&inner);
         Some(handler::BoxZoomHandler { inner })
     }
 
@@ -541,8 +653,6 @@ impl Map {
             .serialize(&ser)
             .map_err(|_| anyhow::anyhow!("Failed to convert GeoJson"))?;
 
-        web_sys::console::log_1(&data);
-
         self.inner.Map_addSource(id.into(), data);
 
         Ok(())
@@ -550,7 +660,6 @@ impl Map {
 
     pub fn get_geojson_source(&self, id: impl Into<String>) -> Option<source::GeoJsonSource> {
         let source = self.inner.Map_getSource(id.into());
-        web_sys::console::log_2(&JsValue::from("Source: "), &source);
 
         if !source.is_undefined() {
             Some(GeoJsonSource {
@@ -561,9 +670,9 @@ impl Map {
         }
     }
 
-    pub fn pan_to(&self, latlng: LatLng) {
+    pub fn pan_to(&self, latlng: LngLat) {
         self.inner
-            .Map_panTo(latlng, JsValue::undefined(), JsValue::undefined());
+            .Map_panTo(&latlng.inner, JsValue::undefined(), JsValue::undefined());
     }
 
     pub fn loaded(&self) -> bool {

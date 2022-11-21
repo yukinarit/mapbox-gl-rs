@@ -1,6 +1,6 @@
 use futures::channel::oneshot;
 use log::*;
-use mapboxgl::{event, LatLng, Map, MapEventListner, MapFactory, MapOptions, Popup, PopupOptions};
+use mapboxgl::{event, LngLat, Map, MapEventListner, MapFactory, MapOptions, Popup, PopupOptions};
 use std::borrow::BorrowMut;
 use std::{cell::RefCell, rc::Rc};
 use yew::prelude::*;
@@ -16,10 +16,7 @@ impl MapEventListner for Listner {
     }
 
     fn on_click(&mut self, map: &Map, e: event::MapMouseEvent) {
-        let latlng = LatLng {
-            lat: e.lng_lat.lat,
-            lng: e.lng_lat.lng,
-        };
+        let latlng = LngLat::new(e.lng_lat.lng, e.lng_lat.lat);
 
         let popup = Popup::new(latlng, PopupOptions::new());
         popup.set_html("<h1>Hello</h1>");
@@ -69,10 +66,7 @@ pub fn create_map() -> MapFactory {
         .unwrap_or("pk.eyJ1IjoieXVraW5hcml0IiwiYSI6ImNsYTdncnVsZDBuYTgzdmxkanhqanZwdnoifQ.m3FLgX5Elx1fUIyyn7dZYg");
 
     let opts = MapOptions::new(token.into(), "map".into())
-        .center(LatLng {
-            lat: 35.6812373,
-            lng: 139.7647863,
-        })
+        .center(LngLat::new(139.7647863, 35.6812373))
         .zoom(15.0);
 
     mapboxgl::MapFactory::new(opts).unwrap()

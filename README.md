@@ -59,7 +59,7 @@ trunk serve
     * [ ] [ScaleControl](https://docs.mapbox.com/mapbox-gl-js/api/markers/#scalecontrol)
 * Geography and Geometry
     * [x] [LngLat](https://docs.mapbox.com/mapbox-gl-js/api/geography/#lnglat)
-    * [ ] [LngLatBounds](https://docs.mapbox.com/mapbox-gl-js/api/geography/#lnglatbounds)
+    * [x] [LngLatBounds](https://docs.mapbox.com/mapbox-gl-js/api/geography/#lnglatbounds)
     * [ ] [LngLatBoundsLike](https://docs.mapbox.com/mapbox-gl-js/api/geography/#lnglatboundslike)
     * [ ] [LngLatLike](https://docs.mapbox.com/mapbox-gl-js/api/geography/#lnglatlike)
     * [ ] [MercatorCoordinate](https://docs.mapbox.com/mapbox-gl-js/api/geography/#mercatorcoordinate)

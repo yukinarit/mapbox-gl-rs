@@ -39,17 +39,17 @@ impl MarkerOptions {
 
 pub struct Marker {
     inner: crate::js::Marker,
-    latlng: crate::LatLng,
+    latlng: crate::LngLat,
 }
 
 impl Marker {
-    pub fn new(latlng: crate::LatLng, options: MarkerOptions) -> Marker {
+    pub fn new(latlng: crate::LngLat, options: MarkerOptions) -> Marker {
         let inner = crate::js::Marker::maker_new(options.build());
         Marker { inner, latlng }
     }
 
     pub fn add_to(&self, map: &crate::Map) {
-        self.inner.setLngLat(self.latlng.clone());
+        self.inner.setLngLat(&self.latlng.inner);
         self.inner.addTo(&map.inner)
     }
 

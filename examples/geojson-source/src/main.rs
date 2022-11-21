@@ -1,6 +1,6 @@
 use futures::channel::oneshot;
 use log::*;
-use mapboxgl::{event, layer, LatLng, Layer, Map, MapEventListner, MapFactory, MapOptions};
+use mapboxgl::{event, layer, Layer, LngLat, Map, MapEventListner, MapFactory, MapOptions};
 use std::borrow::BorrowMut;
 use std::{cell::RefCell, rc::Rc};
 use yew::prelude::*;
@@ -108,10 +108,7 @@ pub fn create_map() -> MapFactory {
         .unwrap_or("pk.eyJ1IjoieXVraW5hcml0IiwiYSI6ImNsYTdncnVsZDBuYTgzdmxkanhqanZwdnoifQ.m3FLgX5Elx1fUIyyn7dZYg");
 
     let opts = MapOptions::new(token.into(), "map".into())
-        .center(LatLng {
-            lat: 37.830348,
-            lng: -122.486052,
-        })
+        .center(LngLat::new(-122.486052, 37.830348))
         .zoom(15.0);
 
     mapboxgl::MapFactory::new(opts).unwrap()

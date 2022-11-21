@@ -2,37 +2,89 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
-    pub type LngLatLike;
+    pub type LngLat;
 
     #[wasm_bindgen(constructor, js_namespace = mapboxgl)]
-    pub fn new(lng: f64, lat: f64) -> LngLatLike;
+    pub fn new(lng: f64, lat: f64) -> LngLat;
 
     #[wasm_bindgen(method, getter)]
-    pub fn lng(this: &LngLatLike) -> f64;
+    pub fn lng(this: &LngLat) -> f64;
 
     #[wasm_bindgen(method, setter)]
-    pub fn set_lng(this: &LngLatLike, v: f64) -> LngLatLike;
+    pub fn set_lng(this: &LngLat, v: f64) -> LngLat;
 
     #[wasm_bindgen(method, getter)]
-    pub fn lat(this: &LngLatLike) -> f64;
+    pub fn lat(this: &LngLat) -> f64;
 
     #[wasm_bindgen(method, setter)]
-    pub fn set_lat(this: &LngLatLike, v: f64) -> LngLatLike;
+    pub fn set_lat(this: &LngLat, v: f64) -> LngLat;
+
+    #[wasm_bindgen(method)]
+    pub fn wrap(this: &LngLat) -> LngLat;
+
+    #[wasm_bindgen(method)]
+    pub fn toArray(this: &LngLat) -> Vec<f64>;
+
+    #[wasm_bindgen(method)]
+    pub fn toString(this: &LngLat) -> String;
+
+    #[wasm_bindgen(method)]
+    pub fn distanceTo(this: &LngLat, lngLat: &LngLat) -> f64;
+
+    #[wasm_bindgen(method)]
+    pub fn toBounds(this: &LngLat, radius: f64) -> LngLatBounds;
+
+    // --
 
     pub type LngLatBounds;
 
     #[wasm_bindgen(constructor, js_namespace = mapboxgl)]
-    pub fn new(sw: LngLatLike, ne: LngLatLike) -> LngLatBounds;
+    pub fn new(sw: LngLat, ne: LngLat) -> LngLatBounds;
 
-    #[wasm_bindgen(method, getter)]
-    pub fn sw(this: &LngLatBounds) -> LngLatLike;
+    #[wasm_bindgen(method)]
+    pub fn setNorthEast(this: &LngLatBounds, ne: LngLat) -> LngLat;
 
-    #[wasm_bindgen(method, getter)]
-    pub fn ne(this: &LngLatBounds) -> LngLatLike;
+    #[wasm_bindgen(method)]
+    pub fn setSouthWest(this: &LngLatBounds, sw: LngLat) -> LngLat;
 
-    ///
-    /// Map
-    ///
+    #[wasm_bindgen(method)]
+    pub fn getCenter(this: &LngLatBounds) -> LngLat;
+
+    #[wasm_bindgen(method)]
+    pub fn getSouthWest(this: &LngLatBounds) -> LngLat;
+
+    #[wasm_bindgen(method)]
+    pub fn getNorthEast(this: &LngLatBounds) -> LngLat;
+
+    #[wasm_bindgen(method)]
+    pub fn getNorthWest(this: &LngLatBounds) -> LngLat;
+
+    #[wasm_bindgen(method)]
+    pub fn getSouthEast(this: &LngLatBounds) -> LngLat;
+
+    #[wasm_bindgen(method)]
+    pub fn getWest(this: &LngLatBounds) -> f64;
+
+    #[wasm_bindgen(method)]
+    pub fn getSouth(this: &LngLatBounds) -> f64;
+
+    #[wasm_bindgen(method)]
+    pub fn getEast(this: &LngLatBounds) -> f64;
+
+    #[wasm_bindgen(method)]
+    pub fn getNorth(this: &LngLatBounds) -> f64;
+
+    #[wasm_bindgen(method)]
+    pub fn isEmpty(this: &LngLatBounds) -> f64;
+
+    #[wasm_bindgen(method)]
+    pub fn contains(this: &LngLat) -> bool;
+
+    #[wasm_bindgen(method)]
+    pub fn toString(this: &LngLatBounds) -> String;
+
+    // --
+
     pub type Map;
 
     #[wasm_bindgen(constructor, js_namespace = mapboxgl)]
@@ -112,11 +164,10 @@ extern "C" {
     pub fn set_handler(this: &Map, name: &str, handler: BoxZoomHandler) -> JsValue;
 
     #[wasm_bindgen(method, js_name=panTo)]
-    pub fn Map_panTo(this: &Map, lngLat: crate::LatLng, options: JsValue, eventData: JsValue);
+    pub fn Map_panTo(this: &Map, lngLat: &LngLat, options: JsValue, eventData: JsValue);
 
-    ///
-    /// Handler
-    ///
+    // --
+
     pub type BoxZoomHandler;
 
     #[wasm_bindgen(constructor, js_namespace = mapboxgl)]
@@ -140,16 +191,15 @@ extern "C" {
     #[wasm_bindgen(method, js_name=enableRotation)]
     pub fn BoxZoomHandler_enableRotation(this: &BoxZoomHandler);
 
-    ///
-    /// Marker
-    ///
+    // --
+
     pub type Marker;
 
     #[wasm_bindgen(constructor, js_namespace = mapboxgl)]
     pub fn maker_new(options: JsValue) -> Marker;
 
     #[wasm_bindgen(method)]
-    pub fn setLngLat(this: &Marker, lngLat: crate::LatLng);
+    pub fn setLngLat(this: &Marker, lngLat: &LngLat);
 
     #[wasm_bindgen(method)]
     pub fn addTo(this: &Marker, map: &Map);
@@ -157,9 +207,8 @@ extern "C" {
     #[wasm_bindgen(method)]
     pub fn remove(this: &Marker);
 
-    ///
-    /// Popup
-    ///
+    // --
+
     pub type Popup;
 
     #[wasm_bindgen(constructor, js_namespace = mapboxgl)]
@@ -169,14 +218,13 @@ extern "C" {
     pub fn Popup_setHTML(this: &Popup, html: String);
 
     #[wasm_bindgen(method, js_name=setLngLat)]
-    pub fn Popup_setLngLat(this: &Popup, lngLat: crate::LatLng);
+    pub fn Popup_setLngLat(this: &Popup, lngLat: &LngLat);
 
     #[wasm_bindgen(method, js_name=addTo)]
     pub fn Popup_addTo(this: &Popup, map: &Map);
 
-    ///
-    /// Popup
-    ///
+    // --
+
     pub type GeoJSONSource;
 
     #[wasm_bindgen(method, js_name=setData)]

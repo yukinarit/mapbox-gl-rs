@@ -1,7 +1,7 @@
 use futures::channel::oneshot;
 use gloo::timers::future::TimeoutFuture;
 use log::*;
-use mapboxgl::{layer, LatLng, Layer, Map, MapEventListner, MapFactory, MapOptions};
+use mapboxgl::{layer, Layer, LngLat, Map, MapEventListner, MapFactory, MapOptions};
 use std::borrow::BorrowMut;
 use std::{cell::RefCell, ops::Deref, rc::Rc};
 use wasm_bindgen::JsCast;
@@ -85,10 +85,10 @@ fn app() -> Html {
                             if let geojson::Value::LineString(coordinates) =
                                 &path.features[0].geometry.as_ref().unwrap().value
                             {
-                                let latlng = LatLng {
-                                    lat: coordinates.last().unwrap()[1],
-                                    lng: coordinates.last().unwrap()[0],
-                                };
+                                let latlng = LngLat::new(
+                                    coordinates.last().unwrap()[0],
+                                    coordinates.last().unwrap()[1],
+                                );
                                 info!("latlng = {:?}", latlng);
                                 update_data(source, path);
                                 map.map.pan_to(latlng);
@@ -151,10 +151,7 @@ pub fn create_map() -> MapFactory {
     let token = std::option_env!("MAPBOX_TOKEN")
         .unwrap_or("pk.eyJ1IjoieXVraW5hcml0IiwiYSI6ImNsYTdncnVsZDBuYTgzdmxkanhqanZwdnoifQ.m3FLgX5Elx1fUIyyn7dZYg");
     let opts = MapOptions::new(token.into(), "map".into())
-        .center(LatLng {
-            lat: 45.632433,
-            lng: -122.019807,
-        })
+        .center(LngLat::new(-122.019807, 45.632433))
         .zoom(15.0);
     mapboxgl::MapFactory::new(opts).unwrap()
 }
