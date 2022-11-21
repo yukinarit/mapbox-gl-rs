@@ -22,17 +22,17 @@ impl PopupOptions {
 
 pub struct Popup {
     inner: crate::js::Popup,
-    latlng: crate::LatLng,
+    latlng: crate::LngLat,
 }
 
 impl Popup {
-    pub fn new(latlng: crate::LatLng, options: PopupOptions) -> Popup {
+    pub fn new(latlng: crate::LngLat, options: PopupOptions) -> Popup {
         let inner = crate::js::Popup::Popup_new(options.build());
         Popup { inner, latlng }
     }
 
     pub fn add_to(&self, map: &crate::Map) {
-        self.inner.Popup_setLngLat(self.latlng.clone());
+        self.inner.Popup_setLngLat(&self.latlng.inner);
         self.inner.Popup_addTo(&map.inner)
     }
 
