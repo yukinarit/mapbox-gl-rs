@@ -94,6 +94,12 @@ trunk serve
 
 [![](https://raw.githubusercontent.com/yukinarit/mapbox-gl-rs/main/popup.gif)](https://github.com/yukinarit/mapbox-gl-rs/tree/main/examples/popup)
 
+* [simple](https://github.com/yukinarit/mapbox-gl-rs/tree/main/examples/simple): Hello world
+* [on-load](https://github.com/yukinarit/mapbox-gl-rs/tree/main/examples/on-load): Catch the event when the map is loaded
+* [popup](https://github.com/yukinarit/mapbox-gl-rs/tree/main/examples/popup): Show popup control
+* [geojson-source](https://github.com/yukinarit/mapbox-gl-rs/tree/main/examples/geojson-source): Load GeoJSON source and show lines
+* [set-data](https://github.com/yukinarit/mapbox-gl-rs/tree/main/examples/set-data): Update paths in realtime using set-data
+
 ## License
 
 This project is licensed under the [MIT license](https://github.com/yukinarit/mapbox-gl-rs/blob/main/LICENSE).
