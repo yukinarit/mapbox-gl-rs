@@ -1,7 +1,7 @@
 use futures::channel::oneshot;
 use gloo::timers::future::TimeoutFuture;
 use log::*;
-use mapboxgl::{layer, Layer, LngLat, Map, MapEventListner, MapFactory, MapOptions};
+use mapboxgl::{layer, Layer, LngLat, Map, MapEventListener, MapFactory, MapOptions};
 use std::borrow::BorrowMut;
 use std::{cell::RefCell, ops::Deref, rc::Rc};
 use wasm_bindgen::JsCast;
@@ -42,16 +42,16 @@ fn use_map() -> Rc<RefCell<Option<MapFactory>>> {
             move |_| {
                 let mut m = create_map();
 
-                struct Listner {
+                struct Listener {
                     tx: Option<oneshot::Sender<()>>,
                 }
-                impl MapEventListner for Listner {
+                impl MapEventListener for Listener {
                     fn on_load(&mut self, _map: &Map, _e: mapboxgl::event::MapBaseEvent) {
                         self.tx.take().unwrap().send(()).unwrap();
                     }
                 }
                 let (tx, rx) = oneshot::channel();
-                m.set_listener(Listner { tx: Some(tx) });
+                m.set_listener(Listener { tx: Some(tx) });
 
                 wasm_bindgen_futures::spawn_local(async move {
                     rx.await.unwrap();

@@ -1,16 +1,16 @@
 use futures::channel::oneshot;
 use log::*;
-use mapboxgl::{event, LngLat, Map, MapEventListner, MapFactory, MapOptions, Popup, PopupOptions};
+use mapboxgl::{event, LngLat, Map, MapEventListener, MapFactory, MapOptions, Popup, PopupOptions};
 use std::borrow::BorrowMut;
 use std::{cell::RefCell, rc::Rc};
 use yew::prelude::*;
 use yew::{use_effect_with_deps, use_mut_ref};
 
-struct Listner {
+struct Listener {
     tx: Option<oneshot::Sender<()>>,
 }
 
-impl MapEventListner for Listner {
+impl MapEventListener for Listener {
     fn on_load(&mut self, _map: &Map, _e: event::MapBaseEvent) {
         self.tx.take().unwrap().send(()).unwrap();
     }
@@ -35,7 +35,7 @@ fn use_map() -> Rc<RefCell<Option<MapFactory>>> {
                 let mut m = create_map();
 
                 let (tx, rx) = oneshot::channel();
-                m.set_listener(Listner { tx: Some(tx) });
+                m.set_listener(Listener { tx: Some(tx) });
 
                 wasm_bindgen_futures::spawn_local(async move {
                     rx.await.unwrap();
