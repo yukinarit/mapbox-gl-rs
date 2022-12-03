@@ -1,4 +1,4 @@
-use mapboxgl::{event, LngLat, Map, MapEventListner, MapFactory, MapOptions};
+use mapboxgl::{event, LngLat, Map, MapEventListener, MapFactory, MapOptions};
 use std::borrow::BorrowMut;
 use std::{cell::RefCell, rc::Rc};
 use yew::prelude::*;

@@ -1,0 +1,8 @@
+[workspace]
+members = [
+  "geojson-source",
+  "on-load",
+  "popup",
+  "set-data",
+  "simple",
+]

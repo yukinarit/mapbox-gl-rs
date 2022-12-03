@@ -252,7 +252,7 @@ impl MapOptions {
     }
 }
 
-pub trait MapEventListner {
+pub trait MapEventListener {
     fn on_resize(&mut self, _m: &Map, _e: event::MapBaseEvent) {}
     fn on_remove(&mut self, _m: &Map, _e: event::MapBaseEvent) {}
 
@@ -373,7 +373,7 @@ pub struct Handle {
 macro_rules! impl_handler{
     ($(($event:ident, $type:ident),)*) => {
 impl Handle {
-    pub fn new<F: MapEventListner + 'static>(map: Weak<Map>, f: F) -> Handle {
+    pub fn new<F: MapEventListener + 'static>(map: Weak<Map>, f: F) -> Handle {
         let f = Rc::new(RefCell::new(f));
         Handle {
             $($event: impl_event!(map, f, $event, $type),)*
@@ -498,7 +498,7 @@ impl MapFactory {
         })
     }
 
-    pub fn set_listener<F: MapEventListner + 'static>(&mut self, f: F) {
+    pub fn set_listener<F: MapEventListener + 'static>(&mut self, f: F) {
         let map = Arc::downgrade(&self.map);
         self.handle = Some(Handle::new(map, f));
         let handle = self.handle.as_ref().unwrap();
