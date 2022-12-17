@@ -1,17 +1,21 @@
-use mapboxgl::{event, LngLat, Map, MapEventListener, MapFactory, MapOptions};
-use std::borrow::BorrowMut;
+use mapboxgl::{LngLat, MapFactory, MapOptions};
 use std::{cell::RefCell, rc::Rc};
 use yew::prelude::*;
 use yew::{use_effect_with_deps, use_mut_ref};
 
+#[hook]
 fn use_map() -> Rc<RefCell<Option<MapFactory>>> {
     let map = use_mut_ref(|| Option::<MapFactory>::None);
 
     {
-        let mut map = map.clone();
+        let map = map.clone();
         use_effect_with_deps(
             move |_| {
-                let mut m = create_map();
+                if let Ok(mut map) = map.try_borrow_mut() {
+                    map.replace(create_map());
+                } else {
+                    eprintln!("Failed to create Map");
+                }
                 || {}
             },
             (),
@@ -31,8 +35,7 @@ fn app() -> Html {
 }
 
 pub fn create_map() -> MapFactory {
-    let token = std::option_env!("MAPBOX_TOKEN")
-        .unwrap_or("pk.eyJ1IjoieXVraW5hcml0IiwiYSI6ImNsYTdncnVsZDBuYTgzdmxkanhqanZwdnoifQ.m3FLgX5Elx1fUIyyn7dZYg");
+    let token = std::env!("MAPBOX_TOKEN");
 
     let opts = MapOptions::new(token.into(), "map".into())
         .center(LngLat::new(139.7647863, 35.6812373))
@@ -42,5 +45,5 @@ pub fn create_map() -> MapFactory {
 }
 
 fn main() {
-    yew::start_app::<App>();
+    yew::Renderer::<App>::new().render();
 }
