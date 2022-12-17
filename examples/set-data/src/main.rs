@@ -1,8 +1,7 @@
 use futures::channel::oneshot;
 use gloo::timers::future::TimeoutFuture;
 use log::*;
-use mapboxgl::{layer, Layer, LngLat, Map, MapEventListener, MapFactory, MapOptions};
-use std::borrow::BorrowMut;
+use mapboxgl::{event, layer, Layer, LngLat, Map, MapEventListener, MapFactory, MapOptions};
 use std::{cell::RefCell, ops::Deref, rc::Rc};
 use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::JsFuture;
@@ -10,6 +9,8 @@ use web_sys::{Request, RequestInit, RequestMode, Response};
 use yew::prelude::*;
 use yew::{use_effect_with_deps, use_mut_ref, use_state, UseStateHandle};
 
+/// Custom hook to update state on every interval.
+#[hook]
 fn use_interval(milli: u32) -> UseStateHandle<usize> {
     let second = use_state(|| 0usize);
     {
@@ -33,33 +34,28 @@ fn use_interval(milli: u32) -> UseStateHandle<usize> {
     second
 }
 
+#[hook]
 fn use_map() -> Rc<RefCell<Option<MapFactory>>> {
     let map = use_mut_ref(|| Option::<MapFactory>::None);
 
     {
-        let mut map = map.clone();
+        let map = map.clone();
         use_effect_with_deps(
             move |_| {
                 let mut m = create_map();
 
-                struct Listener {
-                    tx: Option<oneshot::Sender<()>>,
-                }
-                impl MapEventListener for Listener {
-                    fn on_load(&mut self, _map: &Map, _e: mapboxgl::event::MapBaseEvent) {
-                        self.tx.take().unwrap().send(()).unwrap();
-                    }
-                }
                 let (tx, rx) = oneshot::channel();
                 m.set_listener(Listener { tx: Some(tx) });
 
                 wasm_bindgen_futures::spawn_local(async move {
                     rx.await.unwrap();
                     info!("map loaded");
-                    map.borrow_mut().replace(Some(m));
+                    if let Ok(mut map) = map.try_borrow_mut() {
+                        map.replace(m);
+                    } else {
+                        error!("Failed to create Map");
+                    }
                 });
-
-                info!("map created");
                 || {}
             },
             (),
@@ -147,9 +143,19 @@ async fn fetch() -> anyhow::Result<geojson::FeatureCollection> {
     Ok(serde_wasm_bindgen::from_value(json).unwrap())
 }
 
+struct Listener {
+    tx: Option<oneshot::Sender<()>>,
+}
+
+impl MapEventListener for Listener {
+    fn on_load(&mut self, _map: &Map, _e: event::MapBaseEvent) {
+        self.tx.take().unwrap().send(()).unwrap();
+    }
+}
+
 pub fn create_map() -> MapFactory {
-    let token = std::option_env!("MAPBOX_TOKEN")
-        .unwrap_or("pk.eyJ1IjoieXVraW5hcml0IiwiYSI6ImNsYTdncnVsZDBuYTgzdmxkanhqanZwdnoifQ.m3FLgX5Elx1fUIyyn7dZYg");
+    let token = std::env!("MAPBOX_TOKEN");
+
     let opts = MapOptions::new(token.into(), "map".into())
         .center(LngLat::new(-122.019807, 45.632433))
         .zoom(15.0);
@@ -204,5 +210,5 @@ fn subpath(json: &geojson::FeatureCollection, n: usize) -> Option<geojson::Featu
 
 fn main() {
     wasm_logger::init(wasm_logger::Config::default());
-    yew::start_app::<App>();
+    yew::Renderer::<App>::new().render();
 }
