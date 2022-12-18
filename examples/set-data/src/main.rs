@@ -1,3 +1,4 @@
+use anyhow::Context;
 use futures::channel::oneshot;
 use gloo::timers::future::TimeoutFuture;
 use log::*;
@@ -9,9 +10,15 @@ use web_sys::{Request, RequestInit, RequestMode, Response};
 use yew::prelude::*;
 use yew::{use_effect_with_deps, use_mut_ref, use_state, UseStateHandle};
 
+type IntervalState = UseStateHandle<usize>;
+
+type RouteState = UseStateHandle<Option<geojson::FeatureCollection>>;
+
+type MapRef = Rc<RefCell<Option<MapFactory>>>;
+
 /// Custom hook to update state on every interval.
 #[hook]
-fn use_interval(milli: u32) -> UseStateHandle<usize> {
+fn use_interval(milli: u32) -> IntervalState {
     let second = use_state(|| 0usize);
     {
         let second = second.clone();
@@ -35,7 +42,7 @@ fn use_interval(milli: u32) -> UseStateHandle<usize> {
 }
 
 #[hook]
-fn use_map() -> Rc<RefCell<Option<MapFactory>>> {
+fn use_map() -> MapRef {
     let map = use_mut_ref(|| Option::<MapFactory>::None);
 
     {
@@ -75,25 +82,8 @@ fn app() -> Html {
     {
         use_effect_with_deps(
             move |(route, second)| {
-                if let (Some(json), Some(map)) = (route.deref(), map.borrow().as_ref()) {
-                    if let Some(source) = map.map.get_geojson_source("trace") {
-                        if let Some(path) = subpath(json, *second.deref()) {
-                            if let geojson::Value::LineString(coordinates) =
-                                &path.features[0].geometry.as_ref().unwrap().value
-                            {
-                                let latlng = LngLat::new(
-                                    coordinates.last().unwrap()[0],
-                                    coordinates.last().unwrap()[1],
-                                );
-                                info!("latlng = {:?}", latlng);
-                                update_data(source, path);
-                                map.map.pan_to(latlng);
-                            }
-                        }
-                    } else {
-                        let path = subpath(json, *second.deref()).unwrap();
-                        add_data(map, path).unwrap();
-                    }
+                if let Err(e) = update(map, route, second) {
+                    warn!("{:#?}", e);
                 }
                 || ()
             },
@@ -137,8 +127,6 @@ async fn fetch() -> anyhow::Result<geojson::FeatureCollection> {
         .dyn_into()
         .unwrap();
 
-    web_sys::console::log_1(&resp);
-
     let json = JsFuture::from(resp.json().unwrap()).await.unwrap();
     Ok(serde_wasm_bindgen::from_value(json).unwrap())
 }
@@ -160,6 +148,34 @@ pub fn create_map() -> MapFactory {
         .center(LngLat::new(-122.019807, 45.632433))
         .zoom(15.0);
     mapboxgl::MapFactory::new(opts).unwrap()
+}
+
+fn update(map: MapRef, route: &RouteState, second: &IntervalState) -> anyhow::Result<()> {
+    let json = route.as_ref().context("Route is not loaded yet")?;
+    let borrowed = map.borrow();
+    let map = borrowed.as_ref().context("Map is not loaded yet")?;
+
+    if let Some(source) = map.map.get_geojson_source("trace") {
+        // Subsequent update
+        let path = subpath(json, *second.deref()).context("Invalid path")?;
+        if let geojson::Value::LineString(coordinates) =
+            &path.features[0].geometry.as_ref().unwrap().value
+        {
+            let latlng = LngLat::new(
+                coordinates.last().unwrap()[0],
+                coordinates.last().unwrap()[1],
+            );
+            info!("latlng = {:?}", latlng);
+            update_data(source, path);
+            map.map.pan_to(latlng);
+        }
+    } else {
+        // First update
+        let path = subpath(json, *second.deref()).unwrap();
+        add_data(map, path).unwrap();
+    }
+
+    Ok(())
 }
 
 fn add_data(f: &MapFactory, json: geojson::FeatureCollection) -> anyhow::Result<()> {
