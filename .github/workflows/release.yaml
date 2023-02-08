@@ -1,0 +1,21 @@
+name: Publish to crates.io
+
+on:
+  release:
+    types: [released]
+
+jobs:
+  publish:
+    name: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Login
+        uses: actions-rs/cargo@v1
+        with:
+          command: login
+          args: ${{ secrets.CRATES_IO_API_TOKEN }}
+      - name: Publish
+        uses: actions-rs/cargo@v1
+        with:
+          command: publish
