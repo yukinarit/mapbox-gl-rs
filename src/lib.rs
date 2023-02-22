@@ -14,8 +14,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     cell::RefCell,
     ops::DerefMut,
-    rc::Rc,
-    sync::{Arc, Weak},
+    rc::{Rc, Weak},
 };
 use wasm_bindgen::{prelude::*, JsCast};
 
@@ -253,62 +252,62 @@ impl MapOptions {
 }
 
 pub trait MapEventListener {
-    fn on_resize(&mut self, _m: &Map, _e: event::MapBaseEvent) {}
-    fn on_remove(&mut self, _m: &Map, _e: event::MapBaseEvent) {}
+    fn on_resize(&mut self, _m: Rc<Map>, _e: event::MapBaseEvent) {}
+    fn on_remove(&mut self, _m: Rc<Map>, _e: event::MapBaseEvent) {}
 
     // Interaction
-    fn on_mousedown(&mut self, _m: &Map, _e: event::MapMouseEvent) {}
-    fn on_mouseup(&mut self, _m: &Map, _e: event::MapMouseEvent) {}
-    fn on_preclick(&mut self, _m: &Map, _e: event::MapMouseEvent) {}
-    fn on_click(&mut self, _m: &Map, _e: event::MapMouseEvent) {}
-    fn on_dblclick(&mut self, _m: &Map, _e: event::MapMouseEvent) {}
-    fn on_mousemove(&mut self, _m: &Map, _e: event::MapMouseEvent) {}
-    fn on_mouseover(&mut self, _m: &Map, _e: event::MapMouseEvent) {}
-    fn on_mouseenter(&mut self, _m: &Map, _e: event::MapMouseEvent) {}
-    fn on_mouseleave(&mut self, _m: &Map, _e: event::MapMouseEvent) {}
-    fn on_mouseout(&mut self, _m: &Map, _e: event::MapMouseEvent) {}
-    fn on_contextmenu(&mut self, _m: &Map, _e: event::MapMouseEvent) {}
-    fn on_touchstart(&mut self, _m: &Map, _e: event::MapTouchEvent) {}
-    fn on_touchend(&mut self, _m: &Map, _e: event::MapTouchEvent) {}
-    fn on_touchcancel(&mut self, _m: &Map, _e: event::MapTouchEvent) {}
-    fn on_wheel(&mut self, _m: &Map, _e: event::MapWheelEvent) {}
+    fn on_mousedown(&mut self, _m: Rc<Map>, _e: event::MapMouseEvent) {}
+    fn on_mouseup(&mut self, _m: Rc<Map>, _e: event::MapMouseEvent) {}
+    fn on_preclick(&mut self, _m: Rc<Map>, _e: event::MapMouseEvent) {}
+    fn on_click(&mut self, _m: Rc<Map>, _e: event::MapMouseEvent) {}
+    fn on_dblclick(&mut self, _m: Rc<Map>, _e: event::MapMouseEvent) {}
+    fn on_mousemove(&mut self, _m: Rc<Map>, _e: event::MapMouseEvent) {}
+    fn on_mouseover(&mut self, _m: Rc<Map>, _e: event::MapMouseEvent) {}
+    fn on_mouseenter(&mut self, _m: Rc<Map>, _e: event::MapMouseEvent) {}
+    fn on_mouseleave(&mut self, _m: Rc<Map>, _e: event::MapMouseEvent) {}
+    fn on_mouseout(&mut self, _m: Rc<Map>, _e: event::MapMouseEvent) {}
+    fn on_contextmenu(&mut self, _m: Rc<Map>, _e: event::MapMouseEvent) {}
+    fn on_touchstart(&mut self, _m: Rc<Map>, _e: event::MapTouchEvent) {}
+    fn on_touchend(&mut self, _m: Rc<Map>, _e: event::MapTouchEvent) {}
+    fn on_touchcancel(&mut self, _m: Rc<Map>, _e: event::MapTouchEvent) {}
+    fn on_wheel(&mut self, _m: Rc<Map>, _e: event::MapWheelEvent) {}
 
     // Movement
-    fn on_movestart(&mut self, _m: &Map, _e: event::DragEvent) {}
-    fn on_move(&mut self, _m: &Map, _e: event::MapEvent) {}
-    fn on_moveend(&mut self, _m: &Map, _e: event::DragEvent) {}
-    fn on_dragstart(&mut self, _m: &Map, _e: event::MapBaseEvent) {}
-    fn on_drag(&mut self, _m: &Map, _e: event::DragEvent) {}
-    fn on_dragend(&mut self, _m: &Map, _e: event::DragEvent) {}
-    fn on_zoomstart(&mut self, _m: &Map, _e: event::MapBaseEvent) {}
-    fn on_zoom(&mut self, _m: &Map, _e: event::MapBaseEvent) {}
-    fn on_zoomend(&mut self, _m: &Map, _e: event::MapBaseEvent) {}
-    fn on_rotatestart(&mut self, _m: &Map, _e: event::MapBaseEvent) {}
-    fn on_rotate(&mut self, _m: &Map, _e: event::MapBaseEvent) {}
-    fn on_rotateend(&mut self, _m: &Map, _e: event::MapBaseEvent) {}
-    fn on_pitchstart(&mut self, _m: &Map, _e: event::MapBaseEvent) {}
-    fn on_pitch(&mut self, _m: &Map, _e: event::MapBaseEvent) {}
-    fn on_pitchend(&mut self, _m: &Map, _e: event::MapBaseEvent) {}
-    fn on_boxzoomstart(&mut self, _m: &Map, _e: event::MapBoxZoomEvent) {}
-    fn on_boxzoomend(&mut self, _m: &Map, _e: event::MapBoxZoomEvent) {}
-    fn on_boxzoomcancel(&mut self, _m: &Map, _e: event::MapBoxZoomEvent) {}
+    fn on_movestart(&mut self, _m: Rc<Map>, _e: event::DragEvent) {}
+    fn on_move(&mut self, _m: Rc<Map>, _e: event::MapEvent) {}
+    fn on_moveend(&mut self, _m: Rc<Map>, _e: event::DragEvent) {}
+    fn on_dragstart(&mut self, _m: Rc<Map>, _e: event::MapBaseEvent) {}
+    fn on_drag(&mut self, _m: Rc<Map>, _e: event::DragEvent) {}
+    fn on_dragend(&mut self, _m: Rc<Map>, _e: event::DragEvent) {}
+    fn on_zoomstart(&mut self, _m: Rc<Map>, _e: event::MapBaseEvent) {}
+    fn on_zoom(&mut self, _m: Rc<Map>, _e: event::MapBaseEvent) {}
+    fn on_zoomend(&mut self, _m: Rc<Map>, _e: event::MapBaseEvent) {}
+    fn on_rotatestart(&mut self, _m: Rc<Map>, _e: event::MapBaseEvent) {}
+    fn on_rotate(&mut self, _m: Rc<Map>, _e: event::MapBaseEvent) {}
+    fn on_rotateend(&mut self, _m: Rc<Map>, _e: event::MapBaseEvent) {}
+    fn on_pitchstart(&mut self, _m: Rc<Map>, _e: event::MapBaseEvent) {}
+    fn on_pitch(&mut self, _m: Rc<Map>, _e: event::MapBaseEvent) {}
+    fn on_pitchend(&mut self, _m: Rc<Map>, _e: event::MapBaseEvent) {}
+    fn on_boxzoomstart(&mut self, _m: Rc<Map>, _e: event::MapBoxZoomEvent) {}
+    fn on_boxzoomend(&mut self, _m: Rc<Map>, _e: event::MapBoxZoomEvent) {}
+    fn on_boxzoomcancel(&mut self, _m: Rc<Map>, _e: event::MapBoxZoomEvent) {}
 
     // Lifecycle
-    fn on_load(&mut self, _m: &Map, _e: event::MapBaseEvent) {}
-    fn on_render(&mut self, _m: &Map, _e: event::MapBaseEvent) {}
-    fn on_idle(&mut self, _m: &Map, _e: event::MapBaseEvent) {}
-    fn on_error(&mut self, _m: &Map, _message: String) {}
-    fn on_webglcontextlost(&mut self, _m: &Map, _e: event::MapBaseEvent) {}
-    fn on_webglcontextrestored(&mut self, _m: &Map, _e: event::MapBaseEvent) {}
+    fn on_load(&mut self, _m: Rc<Map>, _e: event::MapBaseEvent) {}
+    fn on_render(&mut self, _m: Rc<Map>, _e: event::MapBaseEvent) {}
+    fn on_idle(&mut self, _m: Rc<Map>, _e: event::MapBaseEvent) {}
+    fn on_error(&mut self, _m: Rc<Map>, _message: String) {}
+    fn on_webglcontextlost(&mut self, _m: Rc<Map>, _e: event::MapBaseEvent) {}
+    fn on_webglcontextrestored(&mut self, _m: Rc<Map>, _e: event::MapBaseEvent) {}
 
     // Data loading
-    fn on_data(&mut self, _m: &Map, _e: event::MapDataEvent) {}
-    fn on_styledata(&mut self, _m: &Map, _e: event::MapDataEvent) {}
-    fn on_sourcedata(&mut self, _m: &Map, _e: event::MapDataEvent) {}
-    fn on_dataloading(&mut self, _m: &Map, _e: event::MapDataEvent) {}
-    fn on_styledataloading(&mut self, _m: &Map, _e: event::MapDataEvent) {}
-    fn on_sourcedataloading(&mut self, _m: &Map, _e: event::MapBaseEvent) {}
-    fn on_styleimagemissing(&mut self, _m: &Map, _e: event::MapBaseEvent) {}
+    fn on_data(&mut self, _m: Rc<Map>, _e: event::MapDataEvent) {}
+    fn on_styledata(&mut self, _m: Rc<Map>, _e: event::MapDataEvent) {}
+    fn on_sourcedata(&mut self, _m: Rc<Map>, _e: event::MapDataEvent) {}
+    fn on_dataloading(&mut self, _m: Rc<Map>, _e: event::MapDataEvent) {}
+    fn on_styledataloading(&mut self, _m: Rc<Map>, _e: event::MapDataEvent) {}
+    fn on_sourcedataloading(&mut self, _m: Rc<Map>, _e: event::MapBaseEvent) {}
+    fn on_styleimagemissing(&mut self, _m: Rc<Map>, _e: event::MapBaseEvent) {}
 }
 
 pub struct Handle {
@@ -388,10 +387,16 @@ macro_rules! impl_event {
             Closure::new(enclose!(
                 ($m, $f) move |value: JsValue| {
                     web_sys::console::log_2(&JsValue::from(stringify!($event)), &value);
+
+                    let Some(map) = $m.upgrade() else {
+                        warn!("Failed to get Map handle");
+                        return;
+                    };
+
                     match  value.try_into() {
                         Ok(e) => {
                             if let Ok(mut f) = $f.try_borrow_mut() {
-                                f.deref_mut().$event($m.upgrade().unwrap().as_ref(), e);
+                                f.deref_mut().$event(map, e);
                             } else {
                                 error!("Event handler is being called somewhere.");
                             }
@@ -407,9 +412,14 @@ macro_rules! impl_event {
             Closure::new(enclose!(
                 ($m, $f) move |value: JsValue| {
                     web_sys::console::log_2(&JsValue::from(stringify!($event)), &value);
-                    //$f.$event($m.upgrade().unwrap().as_ref(), value.as_string().unwrap());
+
+                    let Some(map) = $m.upgrade() else {
+                        warn!("Failed to get Map handle");
+                        return;
+                    };
+
                     if let Ok(mut f) = $f.try_borrow_mut() {
-                        f.deref_mut().$event($m.upgrade().unwrap().as_ref(), value.as_string().unwrap());
+                        f.deref_mut().$event(map, value.as_string().unwrap());
                     } else {
                         error!("Event handler is being called somewhere.");
                     }
@@ -478,7 +488,7 @@ impl_handler! {
 }
 
 pub struct MapFactory {
-    pub map: Arc<Map>,
+    pub map: Rc<Map>,
     handle: Option<Handle>,
 }
 
@@ -493,13 +503,13 @@ impl MapFactory {
         let inner = crate::js::Map::new(options);
 
         Ok(MapFactory {
-            map: Arc::new(Map { inner }),
+            map: Rc::new(Map { inner }),
             handle: None,
         })
     }
 
     pub fn set_listener<F: MapEventListener + 'static>(&mut self, f: F) {
-        let map = Arc::downgrade(&self.map);
+        let map = Rc::downgrade(&self.map);
         self.handle = Some(Handle::new(map, f));
         let handle = self.handle.as_ref().unwrap();
 

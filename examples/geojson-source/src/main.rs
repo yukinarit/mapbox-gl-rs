@@ -10,7 +10,7 @@ struct Listener {
 }
 
 impl MapEventListener for Listener {
-    fn on_load(&mut self, map: &Map, _e: event::MapBaseEvent) {
+    fn on_load(&mut self, map: Rc<Map>, _e: event::MapBaseEvent) {
         self.tx.take().unwrap().send(()).unwrap();
 
         use geojson::{Feature, GeoJson, Geometry, Value};
