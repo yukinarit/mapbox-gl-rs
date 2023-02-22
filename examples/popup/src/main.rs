@@ -10,16 +10,16 @@ struct Listener {
 }
 
 impl MapEventListener for Listener {
-    fn on_load(&mut self, _map: &Map, _e: event::MapBaseEvent) {
+    fn on_load(&mut self, _map: Rc<Map>, _e: event::MapBaseEvent) {
         self.tx.take().unwrap().send(()).unwrap();
     }
 
-    fn on_click(&mut self, map: &Map, e: event::MapMouseEvent) {
+    fn on_click(&mut self, map: Rc<Map>, e: event::MapMouseEvent) {
         let latlng = LngLat::new(e.lng_lat.lng, e.lng_lat.lat);
 
         let popup = Popup::new(latlng, PopupOptions::new());
         popup.set_html("<h1>Hello</h1>");
-        popup.add_to(map);
+        popup.add_to(&map);
         debug!("clicked {:?}", e);
     }
 }
