@@ -413,7 +413,7 @@ macro_rules! impl_event {
     ($m: ident, $f:ident, $event:ident, JsValue) => {
             Closure::new(enclose!(
                 ($m, $f) move |value: JsValue| {
-                    web_sys::console::log_2(&JsValue::from(stringify!($event)), &value);
+                    web_sys::console::debug_2(&JsValue::from(stringify!($event)), &value);
 
                     let Some(map) = $m.upgrade() else {
                         warn!("Failed to get Map handle");
@@ -438,7 +438,7 @@ macro_rules! impl_event {
     ($m:ident, $f:ident, $event:ident, String) => {
             Closure::new(enclose!(
                 ($m, $f) move |value: JsValue| {
-                    web_sys::console::log_2(&JsValue::from(stringify!($event)), &value);
+                    web_sys::console::debug_2(&JsValue::from(stringify!($event)), &value);
 
                     let Some(map) = $m.upgrade() else {
                         warn!("Failed to get Map handle");
