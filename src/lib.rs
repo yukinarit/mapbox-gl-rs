@@ -37,6 +37,24 @@ pub struct LngLat {
     inner: js::LngLat,
 }
 
+impl LngLat {
+    pub fn lng(&self) -> f64 {
+        self.inner.lng()
+    }
+
+    pub fn lat(&self) -> f64 {
+        self.inner.lat()
+    }
+
+    pub fn set_lng(&self, v: f64) {
+        self.inner.set_lng(v);
+    }
+
+    pub fn set_lat(&self, v: f64) {
+        self.inner.set_lat(v);
+    }
+}
+
 impl std::fmt::Debug for LngLat {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("LngLat")
@@ -113,6 +131,15 @@ impl ToString for LngLat {
 #[wasm_bindgen]
 pub struct LngLatBounds {
     inner: js::LngLatBounds,
+}
+
+impl std::fmt::Debug for LngLatBounds {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("LngLatBounds")
+            .field("sw", &self.get_south_west())
+            .field("ne", &self.get_north_east())
+            .finish()
+    }
 }
 
 impl LngLatBounds {
@@ -687,5 +714,9 @@ impl Map {
 
     pub fn loaded(&self) -> bool {
         self.inner.Map_loaded()
+    }
+
+    pub fn get_zoom(&self) -> f64 {
+        self.inner.getZoom()
     }
 }
