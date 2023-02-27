@@ -6,4 +6,5 @@ members = [
   "set-data",
   "simple",
   "sycamore-simple",
+  "add-image",
 ]
