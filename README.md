@@ -30,7 +30,7 @@
 
 Add `mapboxgl` to your Cargo.toml
 ```toml
-mapboxgl = "0.1.0"
+mapboxgl = "0.2"
 ```
 
 Add the following CSS and JavaScript snippet in html, so that mapboxgl JavaScript module is loaded.
@@ -47,8 +47,25 @@ trunk serve
 ## Supported features
 
 * Map
-    * [x] [Map](https://docs.mapbox.com/mapbox-gl-js/api/map/)
     * [x] [Options](https://docs.mapbox.com/mapbox-gl-js/api/properties/)
+	* [ ] [Interaction handlers](https://docs.mapbox.com/mapbox-gl-js/api/map/#instance-members-interaction-handlers)
+	* [ ] [Controls](https://docs.mapbox.com/mapbox-gl-js/api/map/#instance-members-interaction-handler://docs.mapbox.com/mapbox-gl-js/api/map/#instance-members-controls)
+	* [ ] [Map constraints](https://docs.mapbox.com/mapbox-gl-js/api/map/#instance-members-map-constraints)
+	* [ ] [Point conversion](https://docs.mapbox.com/mapbox-gl-js/api/map/#instance-members-point-conversion)
+	* [ ] [Working with events](https://docs.mapbox.com/mapbox-gl-js/api/map/#instance-members-working-with-events)
+	* [ ] [Sources](https://docs.mapbox.com/mapbox-gl-js/api/map/#instance-members-sources)
+	* [x] [Images](https://docs.mapbox.com/mapbox-gl-js/api/map/#instance-members-images)
+	* [ ] [Layers](https://docs.mapbox.com/mapbox-gl-js/api/map/#instance-members-layers)
+	* [ ] [Style properties](https://docs.mapbox.com/mapbox-gl-js/api/map/#instance-members-style-properties)
+	* [ ] [Feature state](https://docs.mapbox.com/mapbox-gl-js/api/map/#instance-members-feature-state)
+	* [ ] [Lifecycle](https://docs.mapbox.com/mapbox-gl-js/api/map/#instance-members-lifecycle)
+	* [ ] [Debug features](https://docs.mapbox.com/mapbox-gl-js/api/map/#instance-members-debug-features)
+	* [ ] [Camera](https://docs.mapbox.com/mapbox-gl-js/api/map/#instance-members-camera)
+* Events
+    * [x] [Interactions](https://docs.mapbox.com/mapbox-gl-js/api/map/#events-interaction)
+    * [x] [Movement](https://docs.mapbox.com/mapbox-gl-js/api/map/#events-movement)
+    * [x] [Lifecycle](https://docs.mapbox.com/mapbox-gl-js/api/map/#events-lifecycle)
+    * [x] [Data loading](https://docs.mapbox.com/mapbox-gl-js/api/map/#events-data-loading)
 * Markers and controls
     * [x] [Marker](https://docs.mapbox.com/mapbox-gl-js/api/markers/#marker)
     * [ ] [AttributionControl](https://docs.mapbox.com/mapbox-gl-js/api/markers/#attributioncontrol)
@@ -99,6 +116,7 @@ trunk serve
 * [popup](https://github.com/yukinarit/mapbox-gl-rs/tree/main/examples/popup): Show popup control
 * [geojson-source](https://github.com/yukinarit/mapbox-gl-rs/tree/main/examples/geojson-source): Load GeoJSON source and show lines
 * [set-data](https://github.com/yukinarit/mapbox-gl-rs/tree/main/examples/set-data): Update paths in realtime using set-data
+* [add-image](https://github.com/yukinarit/mapbox-gl-rs/tree/main/examples/add-image): Display image on a map
 
 ## License
 

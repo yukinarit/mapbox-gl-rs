@@ -114,9 +114,42 @@ extern "C" {
     #[wasm_bindgen(method)]
     pub fn isRotating(this: &Map) -> bool;
 
+    // Images
+
+    /// Add image resource.
+    /// https://docs.mapbox.com/mapbox-gl-js/api/map/#map#addimage
+    #[wasm_bindgen(method)]
+    pub fn addImage(this: &Map, id: String, image: JsValue, options: JsValue);
+
+    /// Update an existing image in a style.
+    /// https://docs.mapbox.com/mapbox-gl-js/api/map/#map#loadimage
+    #[wasm_bindgen(method)]
+    pub fn updateImage(this: &Map, id: String, image: JsValue) -> bool;
+
+    /// Check whether or not an image with a specific ID exists in the style.
+    /// https://docs.mapbox.com/mapbox-gl-js/api/map/#map#updateimage
+    #[wasm_bindgen(method)]
+    pub fn hasImage(this: &Map, id: String) -> bool;
+
+    /// Remove an image from a style.
+    /// https://docs.mapbox.com/mapbox-gl-js/api/map/#map#removeimage
+    #[wasm_bindgen(method)]
+    pub fn removeImage(this: &Map, id: String);
+
+    /// Load an image from an external URL.
+    /// https://docs.mapbox.com/mapbox-gl-js/api/map/#map#loadimage
+    #[wasm_bindgen(method)]
+    pub fn loadImage(this: &Map, url: String, callback: &Closure<dyn FnMut(JsValue, JsValue)>);
+
+    /// Returns an Array of strings containing the IDs of all images currently available in the
+    /// map.
+    /// https://docs.mapbox.com/mapbox-gl-js/api/map/#map#listimages
+    #[wasm_bindgen(method)]
+    pub fn listImages(this: &Map) -> JsValue;
+
     // Lifecycle
-    #[wasm_bindgen(method, js_name=loaded)]
-    pub fn Map_loaded(this: &Map) -> bool;
+    #[wasm_bindgen(method)]
+    pub fn loaded(this: &Map) -> bool;
 
     #[wasm_bindgen(method)]
     pub fn remove(this: &Map);
@@ -124,14 +157,23 @@ extern "C" {
     #[wasm_bindgen(method)]
     pub fn triggerRepaint(this: &Map);
 
-    #[wasm_bindgen(method, js_name=addSource)]
-    pub fn Map_addSource(this: &Map, id: String, value: JsValue);
+    #[wasm_bindgen(method)]
+    pub fn addSource(this: &Map, id: String, source: JsValue);
 
-    #[wasm_bindgen(method, js_name=getSource)]
-    pub fn Map_getSource(this: &Map, id: String) -> JsValue;
+    #[wasm_bindgen(method)]
+    pub fn isSourceLoaded(this: &Map, id: String) -> bool;
 
-    #[wasm_bindgen(method, js_name=addLayer)]
-    pub fn Map_addLayer(this: &Map, value: JsValue);
+    #[wasm_bindgen(method)]
+    pub fn areTilesLoaded(this: &Map) -> bool;
+
+    #[wasm_bindgen(method)]
+    pub fn removeSource(this: &Map, id: String);
+
+    #[wasm_bindgen(method)]
+    pub fn getSource(this: &Map, id: String) -> JsValue;
+
+    #[wasm_bindgen(method)]
+    pub fn addLayer(this: &Map, value: JsValue);
 
     #[wasm_bindgen(method, setter)]
     pub fn set_showTileBoundaries(this: &Map, v: bool) -> Map;
@@ -163,8 +205,8 @@ extern "C" {
     #[wasm_bindgen(method, structural, indexing_setter)]
     pub fn set_handler(this: &Map, name: &str, handler: BoxZoomHandler) -> JsValue;
 
-    #[wasm_bindgen(method, js_name=panTo)]
-    pub fn Map_panTo(this: &Map, lngLat: &LngLat, options: JsValue, eventData: JsValue);
+    #[wasm_bindgen(method)]
+    pub fn panTo(this: &Map, lngLat: &LngLat, options: JsValue, eventData: JsValue);
 
     // --
 

@@ -187,8 +187,10 @@ fn add_data(f: &MapFactory, json: geojson::FeatureCollection) -> anyhow::Result<
         r#type: "line".into(),
         source: "trace".into(),
         layout: Some(layer::Layout {
-            line_join: "round".into(),
-            line_cap: "round".into(),
+            line_join: Some("round".into()),
+            line_cap: Some("round".into()),
+            icon_image: None,
+            icon_size: None,
         }),
         paint: Some(layer::Paint {
             line_color: "yellow".into(),

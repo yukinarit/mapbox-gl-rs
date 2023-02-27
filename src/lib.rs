@@ -1,6 +1,9 @@
 #![doc = include_str!("../README.md")]
+mod callback;
+pub mod error;
 pub mod event;
 pub mod handler;
+pub mod image;
 mod js;
 pub mod layer;
 pub mod marker;
@@ -16,10 +19,14 @@ use std::{
     ops::DerefMut,
     rc::{Rc, Weak},
 };
+use uuid::Uuid;
 use wasm_bindgen::{prelude::*, JsCast};
 
+use callback::CallbackStore;
+pub use error::Error;
 pub use handler::BoxZoomHandler;
-pub use layer::Layer;
+pub use image::{Image, ImageOptions};
+pub use layer::{Layer, Layout, LayoutProperty};
 pub use marker::{Marker, MarkerOptions};
 pub use popup::{Popup, PopupOptions};
 pub use source::GeoJsonSource;
@@ -438,7 +445,7 @@ macro_rules! impl_event {
     ($m:ident, $f:ident, $event:ident, String) => {
             Closure::new(enclose!(
                 ($m, $f) move |value: JsValue| {
-                    web_sys::console::debug_2(&JsValue::from(stringify!($event)), &value);
+                    web_sys::console::warn_2(&JsValue::from(stringify!($event)), &value);
 
                     let Some(map) = $m.upgrade() else {
                         warn!("Failed to get Map handle");
@@ -521,6 +528,7 @@ pub struct MapFactory {
 
 pub struct Map {
     pub(crate) inner: crate::js::Map,
+    pub(crate) image_cbs: CallbackStore<dyn FnMut(JsValue, JsValue) + 'static>,
 }
 
 impl MapFactory {
@@ -530,7 +538,10 @@ impl MapFactory {
         let inner = crate::js::Map::new(options);
 
         Ok(MapFactory {
-            map: Rc::new(Map { inner }),
+            map: Rc::new(Map {
+                inner,
+                image_cbs: CallbackStore::new(),
+            }),
             handle: None,
         })
     }
@@ -671,8 +682,79 @@ impl Map {
             .set_handler(&HandlerType::BoxZoom.to_string(), inner);
     }
 
+    /// Add image resource.
+    pub fn add_image(
+        &self,
+        id: impl Into<String>,
+        image: crate::image::Image,
+        options: crate::image::ImageOptions,
+    ) -> crate::error::Result<()> {
+        self.inner.addImage(
+            id.into(),
+            image.inner,
+            serde_wasm_bindgen::to_value(&options).map_err(Error::from)?,
+        );
+
+        Ok(())
+    }
+
+    /// Update an existing image in a style.
+    pub fn update_image(
+        &self,
+        id: impl Into<String>,
+        image: crate::image::Image,
+    ) -> crate::error::Result<()> {
+        self.inner.updateImage(id.into(), image.inner);
+
+        Ok(())
+    }
+
+    /// Check whether or not an image with a specific ID exists in the style.
+    pub fn has_image(&self, id: impl Into<String>) -> bool {
+        self.inner.hasImage(id.into())
+    }
+
+    /// Remove an image from a style.
+    pub fn remove_image(&self, id: impl Into<String>) {
+        self.inner.removeImage(id.into())
+    }
+
+    /// Load an image from an external URL.
+    pub fn load_image(
+        &self,
+        url: impl Into<String>,
+        mut callback: impl FnMut(crate::error::Result<crate::image::Image>) + 'static,
+    ) {
+        let callback_id = Uuid::new_v4();
+        let cbs = self.image_cbs.clone();
+
+        let callback = Closure::new(move |e: JsValue, image| {
+            if e.is_null() {
+                callback(Ok(crate::image::Image { inner: image }));
+            } else {
+                callback(Err(Error::LoadImage(e)));
+            }
+
+            if let Err(e) = cbs.remove(&callback_id) {
+                warn!("{e}");
+            }
+        });
+
+        self.inner.loadImage(url.into(), &callback);
+
+        if let Err(e) = self.image_cbs.add(callback_id, callback) {
+            warn!("{e}");
+        }
+    }
+
+    /// Returns an Array of strings containing the IDs of all images currently available in the map.
+    pub fn list_images(&self) -> error::Result<Vec<String>> {
+        let images = self.inner.listImages();
+        serde_wasm_bindgen::from_value(images).map_err(Error::from)
+    }
+
     pub fn add_layer(&self, layer: &layer::Layer) -> Result<()> {
-        self.inner.Map_addLayer(
+        self.inner.addLayer(
             serde_wasm_bindgen::to_value(&layer)
                 .map_err(|_| anyhow::anyhow!("Failed to convert Layer"))?,
         );
@@ -690,13 +772,13 @@ impl Map {
             .serialize(&ser)
             .map_err(|_| anyhow::anyhow!("Failed to convert GeoJson"))?;
 
-        self.inner.Map_addSource(id.into(), data);
+        self.inner.addSource(id.into(), data);
 
         Ok(())
     }
 
     pub fn get_geojson_source(&self, id: impl Into<String>) -> Option<source::GeoJsonSource> {
-        let source = self.inner.Map_getSource(id.into());
+        let source = self.inner.getSource(id.into());
 
         if !source.is_undefined() {
             Some(GeoJsonSource {
@@ -707,13 +789,25 @@ impl Map {
         }
     }
 
+    pub fn is_source_loaded(&self, id: impl Into<String>) -> bool {
+        self.inner.isSourceLoaded(id.into())
+    }
+
+    pub fn are_tiles_loaded(&self) -> bool {
+        self.inner.areTilesLoaded()
+    }
+
+    pub fn remove_source(&self, id: impl Into<String>) {
+        self.inner.removeSource(id.into())
+    }
+
     pub fn pan_to(&self, latlng: LngLat) {
         self.inner
-            .Map_panTo(&latlng.inner, JsValue::undefined(), JsValue::undefined());
+            .panTo(&latlng.inner, JsValue::undefined(), JsValue::undefined());
     }
 
     pub fn loaded(&self) -> bool {
-        self.inner.Map_loaded()
+        self.inner.loaded()
     }
 
     pub fn get_zoom(&self) -> f64 {
