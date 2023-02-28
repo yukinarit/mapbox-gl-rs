@@ -5,6 +5,10 @@ on:
     branches: [main]
   pull_request:
     branches: ["*"]
+
+env:
+  MAPBOX_TOKEN: token
+
 jobs:
   test:
     name: Run build and tests
@@ -16,8 +20,6 @@ jobs:
       with:
         command: build
         args: --workspace --all-targets --all-features
-      env:
-        MAPBOX_TOKEN: token
     - name: Clippy
       uses: actions-rs/cargo@v1
       with:
