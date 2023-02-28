@@ -28,3 +28,14 @@ log = "0.4.6"
 geojson = "0.24"
 enclose = "1"
 uuid = { version = "1", features = ["v4", "js"] }
+
+[workspace]
+members = [
+  "examples/geojson-source",
+  "examples/on-load",
+  "examples/popup",
+  "examples/set-data",
+  "examples/simple",
+  "examples/sycamore-simple",
+  "examples/add-image",
+]

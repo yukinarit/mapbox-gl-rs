@@ -92,7 +92,6 @@ fn app() -> Html {
     }
 
     {
-        let route = route.clone();
         use_effect_with_deps(
             |_| {
                 wasm_bindgen_futures::spawn_local(async move {
