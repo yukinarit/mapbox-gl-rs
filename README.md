@@ -30,7 +30,7 @@
 
 Add `mapboxgl` to your Cargo.toml
 ```toml
-mapboxgl = "0.2"
+mapboxgl = "0.3"
 ```
 
 Add the following CSS and JavaScript snippet in html, so that mapboxgl JavaScript module is loaded.
