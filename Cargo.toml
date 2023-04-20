@@ -38,4 +38,5 @@ members = [
   "examples/simple",
   "examples/sycamore-simple",
   "examples/add-image",
+  "examples/leptos-simple",
 ]

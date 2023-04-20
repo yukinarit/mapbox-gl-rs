@@ -7,4 +7,5 @@ members = [
   "simple",
   "sycamore-simple",
   "add-image",
+  "leptos-simple",
 ]
