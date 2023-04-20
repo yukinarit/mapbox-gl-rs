@@ -5,15 +5,15 @@ changelog:
     authors:
       - octocat
   categories:
+    - title: Breaking changes
+      labels:
+        - breaking-change
     - title: New features
       labels:
         - enhancement
     - title: Bug fixes
       labels:
         - bug
-    - title: Breaking changes
-      labels:
-        - breaking-change
     - title: Style fixes
       labels:
         - style
@@ -29,6 +29,9 @@ changelog:
     - title: Test
       labels:
         - test
+    - title: Example
+      labels:
+        - example
     - title: Documentation
       labels:
         - documentation
