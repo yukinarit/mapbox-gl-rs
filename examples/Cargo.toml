@@ -8,4 +8,5 @@ members = [
   "sycamore-simple",
   "add-image",
   "leptos-simple",
+  "custom-icons-with-markers",
 ]

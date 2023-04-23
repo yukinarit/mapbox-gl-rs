@@ -39,4 +39,5 @@ members = [
   "examples/sycamore-simple",
   "examples/add-image",
   "examples/leptos-simple",
+  "examples/custom-icons-with-markers",
 ]
