@@ -26,8 +26,13 @@ pub struct MarkerOptions {
 }
 
 impl MarkerOptions {
-    pub fn build(&self) -> JsValue {
-        serde_wasm_bindgen::to_value(&self).unwrap()
+    pub fn build(mut self) -> JsValue {
+        let obj: js_sys::Object = serde_wasm_bindgen::to_value(&self).unwrap().into();
+        if let Some(element) = self.element.take() {
+            js_sys::Object::define_property(&obj, &JsValue::from_str("element"), &*element).into()
+        } else {
+            obj.into()
+        }
     }
 }
 
