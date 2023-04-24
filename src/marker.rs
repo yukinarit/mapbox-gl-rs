@@ -29,7 +29,8 @@ impl MarkerOptions {
     pub fn build(mut self) -> JsValue {
         let obj: js_sys::Object = serde_wasm_bindgen::to_value(&self).unwrap().into();
         if let Some(element) = self.element.take() {
-            js_sys::Object::define_property(&obj, &JsValue::from_str("element"), &*element).into()
+            js_sys::Reflect::set(&obj, &JsValue::from_str("element"), &element).unwrap();
+            obj.into()
         } else {
             obj.into()
         }
