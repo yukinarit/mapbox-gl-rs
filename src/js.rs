@@ -249,6 +249,9 @@ extern "C" {
     #[wasm_bindgen(method)]
     pub fn remove(this: &Marker);
 
+    #[wasm_bindgen(method, js_name=on)]
+    pub fn Marker_on(this: &Marker, r#type: String, callback: &Closure<dyn Fn(JsValue)>);
+
     // --
 
     pub type Popup;
