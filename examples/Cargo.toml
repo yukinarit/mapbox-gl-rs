@@ -9,4 +9,5 @@ members = [
   "add-image",
   "leptos-simple",
   "custom-icons-with-markers",
+  "draggable-marker",
 ]
