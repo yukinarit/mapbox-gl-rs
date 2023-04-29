@@ -12,11 +12,22 @@ struct MarkerListener {}
 
 struct Listener {
     tx: Option<oneshot::Sender<()>>,
+    marker: Option<MarkerFactory>,
 }
 
 impl MapEventListener for Listener {
-    fn on_load(&mut self, _map: Rc<Map>, _e: event::MapBaseEvent) {
+    fn on_load(&mut self, map: Rc<Map>, _e: event::MapBaseEvent) {
         self.tx.take().unwrap().send(()).unwrap();
+
+        info!("map loaded");
+        let mut marker_options = MarkerOptions::new();
+        marker_options.draggable = Some(true);
+        let marker = Marker::new(LngLat::new(0.0, 0.0), marker_options);
+        let mut marker_factory = MarkerFactory::new(marker.into());
+        marker_factory.set_listener(MarkerListener {});
+        marker_factory.marker.add_to(&map);
+        info!("add marker");
+        self.marker.replace(marker_factory);
     }
 }
 
@@ -44,19 +55,14 @@ fn use_map() -> Rc<RefCell<Option<MapFactory>>> {
             move |_| {
                 let mut m = create_map();
                 let (tx, rx) = oneshot::channel();
-                m.set_listener(Listener { tx: Some(tx) });
+                m.set_listener(Listener {
+                    tx: Some(tx),
+                    marker: None,
+                });
 
                 wasm_bindgen_futures::spawn_local(async move {
                     rx.await.unwrap();
                     if let Ok(mut map) = map.try_borrow_mut() {
-                        info!("map loaded");
-                        let mut marker_options = MarkerOptions::new();
-                        marker_options.draggable = Some(true);
-                        let marker = Marker::new(LngLat::new(0.0, 0.0), marker_options);
-                        let mut marker_factory = MarkerFactory::new(marker.into());
-                        marker_factory.set_listener(MarkerListener {});
-                        marker_factory.marker.add_to(&m.map);
-                        info!("add marker");
                         map.replace(m);
                     } else {
                         log::error!("Failed to create Map");
