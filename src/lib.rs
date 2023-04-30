@@ -13,6 +13,7 @@ pub mod source;
 use anyhow::Result;
 use enclose::enclose;
 use log::*;
+use marker::MarkerFactory;
 use serde::{Deserialize, Serialize};
 use std::{
     cell::RefCell,
@@ -524,6 +525,7 @@ impl_handler! {
 pub struct MapFactory {
     pub map: Rc<Map>,
     handle: Option<Handle>,
+    pub marker: Option<MarkerFactory>,
 }
 
 pub struct Map {
@@ -543,6 +545,7 @@ impl MapFactory {
                 image_cbs: CallbackStore::new(),
             }),
             handle: None,
+            marker: None,
         })
     }
 
@@ -611,6 +614,10 @@ impl MapFactory {
         inner.on("styledataloading".into(), &handle.on_styledataloading);
         inner.on("sourcedataloading".into(), &handle.on_sourcedataloading);
         inner.on("styleimagemissing".into(), &handle.on_styleimagemissing);
+    }
+
+    pub fn set_marker(&mut self, marker: MarkerFactory) {
+        self.marker = Some(marker);
     }
 }
 
