@@ -151,4 +151,10 @@ impl Marker {
     pub fn remove(&self) {
         self.inner.remove()
     }
+
+    pub fn get_lnglat(&self) -> LngLat {
+        LngLat {
+            inner: self.inner.getLngLat(),
+        }
+    }
 }

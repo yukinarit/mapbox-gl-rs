@@ -252,6 +252,9 @@ extern "C" {
     #[wasm_bindgen(method, js_name=on)]
     pub fn Marker_on(this: &Marker, r#type: String, callback: &Closure<dyn Fn(JsValue)>);
 
+    #[wasm_bindgen(method)]
+    pub fn getLngLat(this: &Marker) -> LngLat;
+
     // --
 
     pub type Popup;
