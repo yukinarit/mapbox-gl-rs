@@ -5,6 +5,7 @@ use mapboxgl::{
     event, LngLat, Map, MapEventListener, MapFactory, MapOptions, Marker, MarkerOptions,
 };
 use std::{cell::RefCell, rc::Rc};
+use web_sys::{Document, Element};
 use yew::prelude::*;
 use yew::{use_effect_with_deps, use_mut_ref};
 
@@ -21,16 +22,18 @@ impl MapEventListener for Listener {
 }
 
 impl MarkerEventListener for MarkerListener {
-    fn on_drag(&mut self, _m: Rc<Marker>, _e: event::DragEvent) {
-        info!("drag");
-    }
-
-    fn on_dragstart(&mut self, _m: Rc<Marker>, _e: event::MapBaseEvent) {
-        info!("dragstart");
-    }
-
-    fn on_dragend(&mut self, _m: Rc<Marker>, _e: mapboxgl::event::DragEvent) {
-        info!("dragend");
+    fn on_dragend(&mut self, m: Rc<Marker>, _e: mapboxgl::event::DragEvent) {
+        let document: Document = web_sys::window().unwrap().document().unwrap();
+        let coordinates: Element = document.get_element_by_id("coordinates").unwrap();
+        coordinates
+            .set_attribute("style", "display: block;")
+            .unwrap();
+        let lnglat = m.get_lnglat();
+        coordinates.set_inner_html(&format!(
+            "Longitude: {}<br/>Latitude: {}",
+            lnglat.lng(),
+            lnglat.lat()
+        ));
     }
 }
 
@@ -86,7 +89,10 @@ pub fn create_map() -> MapFactory {
 fn app() -> Html {
     let _map = use_map();
     html! {
-        <div id="map" style="width: 100vw; height: 100vh;"></div>
+        <>
+            <div id="map" style="width: 100vw; height: 100vh;"></div>
+            <pre id="coordinates" class="coordinates"></pre>
+        </>
     }
 }
 
