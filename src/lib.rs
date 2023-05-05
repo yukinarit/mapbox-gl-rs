@@ -13,7 +13,7 @@ pub mod source;
 use anyhow::Result;
 use enclose::enclose;
 use log::*;
-use marker::MarkerFactory;
+use marker::MarkerBundle;
 use serde::{Deserialize, Serialize};
 use std::{
     cell::RefCell,
@@ -525,7 +525,7 @@ impl_handler! {
 pub struct MapFactory {
     pub map: Rc<Map>,
     handle: Option<Handle>,
-    pub marker: Option<MarkerFactory>,
+    pub marker: Option<MarkerBundle>,
 }
 
 pub struct Map {
@@ -616,7 +616,7 @@ impl MapFactory {
         inner.on("styleimagemissing".into(), &handle.on_styleimagemissing);
     }
 
-    pub fn set_marker(&mut self, marker: MarkerFactory) {
+    pub fn set_marker(&mut self, marker: MarkerBundle) {
         self.marker = Some(marker);
     }
 }

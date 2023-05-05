@@ -1,6 +1,6 @@
 use futures::channel::oneshot;
 use log::info;
-use mapboxgl::marker::{MarkerEventListener, MarkerFactory};
+use mapboxgl::marker::{MarkerBundle, MarkerEventListener};
 use mapboxgl::{
     event, LngLat, Map, MapEventListener, MapFactory, MapOptions, Marker, MarkerOptions,
 };
@@ -53,7 +53,7 @@ fn use_map() -> Rc<RefCell<Option<MapFactory>>> {
                 let mut marker_options = MarkerOptions::new();
                 marker_options.draggable = Some(true);
                 let marker = Marker::new(LngLat::new(0.0, 0.0), marker_options);
-                m.set_marker(MarkerFactory::new(marker.into()));
+                m.set_marker(MarkerBundle::new(marker.into()));
                 m.marker.as_mut().unwrap().set_listener(MarkerListener {});
                 m.marker.as_ref().unwrap().marker.add_to(&m.map);
 
