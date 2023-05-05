@@ -17,6 +17,7 @@ use marker::MarkerBundle;
 use serde::{Deserialize, Serialize};
 use std::{
     cell::RefCell,
+    collections::HashMap,
     ops::DerefMut,
     rc::{Rc, Weak},
 };
@@ -525,7 +526,7 @@ impl_handler! {
 pub struct MapFactory {
     pub map: Rc<Map>,
     handle: Option<Handle>,
-    pub marker: Option<MarkerBundle>,
+    pub marker_map: HashMap<Uuid, MarkerBundle>,
 }
 
 pub struct Map {
@@ -545,7 +546,7 @@ impl MapFactory {
                 image_cbs: CallbackStore::new(),
             }),
             handle: None,
-            marker: None,
+            marker_map: HashMap::new(),
         })
     }
 
@@ -616,8 +617,17 @@ impl MapFactory {
         inner.on("styleimagemissing".into(), &handle.on_styleimagemissing);
     }
 
-    pub fn set_marker(&mut self, marker: MarkerBundle) {
-        self.marker = Some(marker);
+    pub fn add_marker(&mut self, marker: MarkerBundle) -> Uuid {
+        let uuid = Uuid::new_v4();
+        marker.marker.add_to(&self.map);
+        self.marker_map.insert(uuid, marker);
+        uuid
+    }
+
+    pub fn remove_marker(&mut self, id: Uuid) {
+        let marker = self.marker_map.get(&id).unwrap();
+        marker.marker.remove();
+        self.marker_map.remove(&id);
     }
 }
 
