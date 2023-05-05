@@ -7,14 +7,14 @@ use wasm_bindgen::prelude::*;
 
 use crate::event;
 
-pub struct MarkerFactory {
+pub struct MarkerBundle {
     pub marker: Rc<Marker>,
     handle: Option<MarkerHandle>,
 }
 
-impl MarkerFactory {
-    pub fn new(marker: Rc<Marker>) -> MarkerFactory {
-        MarkerFactory {
+impl MarkerBundle {
+    pub fn new(marker: Rc<Marker>) -> MarkerBundle {
+        MarkerBundle {
             marker,
             handle: None,
         }
