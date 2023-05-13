@@ -1,38 +1,13 @@
-use std::cell::RefCell;
-use std::rc::{Rc, Weak};
-
-use crate::*;
 use serde::{Deserialize, Serialize};
+use std::{
+    cell::RefCell,
+    rc::{Rc, Weak},
+};
 use wasm_bindgen::prelude::*;
 
-use crate::event;
+use crate::*;
 
-pub struct MarkerBundle {
-    pub marker: Rc<Marker>,
-    handle: Option<MarkerHandle>,
-}
-
-impl MarkerBundle {
-    pub fn new(marker: Rc<Marker>) -> MarkerBundle {
-        MarkerBundle {
-            marker,
-            handle: None,
-        }
-    }
-
-    pub fn set_listener<F: MarkerEventListener + 'static>(&mut self, f: F) {
-        let marker = Rc::downgrade(&self.marker);
-        self.handle = Some(MarkerHandle::new(marker, f));
-        let handle = self.handle.as_ref().unwrap();
-
-        let inner = &self.marker.inner;
-        inner.Marker_on("dragstart".into(), &handle.on_dragstart);
-        inner.Marker_on("drag".into(), &handle.on_drag);
-        inner.Marker_on("dragend".into(), &handle.on_dragend);
-    }
-}
-
-macro_rules! impl_handler_for_marker{
+macro_rules! impl_handler_for_marker {
     ($(($event:ident, $type:ident),)*) => {
 impl MarkerHandle {
     pub fn new<F: MarkerEventListener + 'static>(marker: Weak<Marker>, f: F) -> MarkerHandle {
@@ -51,7 +26,7 @@ macro_rules! impl_event_marker {
             ($m, $f) move |value: JsValue| {
                 web_sys::console::debug_2(&JsValue::from(stringify!($event)), &value);
                 let Some(marker) = $m.upgrade() else {
-                    warn!("Failed to get Marker handle");
+                    warn!("Failed to get a marker handle");
                     return;
                 };
 
@@ -60,7 +35,7 @@ macro_rules! impl_event_marker {
                         if let Ok(mut f) = $f.try_borrow_mut() {
                             f.deref_mut().$event(marker, e);
                         } else {
-                            error!("Event handler is being called somewhere.");
+                            error!("Marker event handler is being called somewhere.");
                         }
                     },
                     Err(e) => {
@@ -83,6 +58,10 @@ pub trait MarkerEventListener {
     fn on_drag(&mut self, _m: Rc<Marker>, _e: event::DragEvent) {}
     fn on_dragend(&mut self, _m: Rc<Marker>, _e: event::DragEvent) {}
 }
+
+struct NoopListener;
+
+impl MarkerEventListener for NoopListener {}
 
 pub struct MarkerHandle {
     on_dragstart: Closure<dyn Fn(JsValue)>,
@@ -133,22 +112,46 @@ impl MarkerOptions {
 }
 
 pub struct Marker {
-    inner: crate::js::Marker,
-    latlng: crate::LngLat,
+    inner: js::Marker,
+    lnglat: LngLat,
+    handle: RefCell<Option<MarkerHandle>>,
 }
 
 impl Marker {
-    pub fn new(latlng: crate::LngLat, options: MarkerOptions) -> Marker {
-        let inner = crate::js::Marker::maker_new(options.build());
-        Marker { inner, latlng }
+    pub fn new(lnglat: LngLat) -> Rc<Marker> {
+        Self::with_listener(lnglat, MarkerOptions::default(), NoopListener {})
     }
 
-    pub fn add_to(&self, map: &crate::Map) {
-        self.inner.setLngLat(&self.latlng.inner);
+    pub fn with_options(lnglat: LngLat, options: MarkerOptions) -> Rc<Marker> {
+        Self::with_listener(lnglat, options, NoopListener {})
+    }
+
+    pub fn with_listener<F>(lnglat: LngLat, options: MarkerOptions, f: F) -> Rc<Marker>
+    where
+        F: MarkerEventListener + 'static,
+    {
+        let marker = Rc::new(Marker {
+            inner: js::Marker::maker_new(options.build()),
+            lnglat,
+            handle: RefCell::new(None),
+        });
+
+        let handle = MarkerHandle::new(Rc::downgrade(&marker), f);
+        let inner = &marker.inner;
+        inner.Marker_on("dragstart".into(), &handle.on_dragstart);
+        inner.Marker_on("drag".into(), &handle.on_drag);
+        inner.Marker_on("dragend".into(), &handle.on_dragend);
+        marker.handle.borrow_mut().replace(handle);
+
+        marker
+    }
+
+    pub(crate) fn add_to(&self, map: &Map) {
+        self.inner.setLngLat(&self.lnglat.inner);
         self.inner.addTo(&map.inner)
     }
 
-    pub fn remove(&self) {
+    pub(crate) fn remove(&self) {
         self.inner.remove()
     }
 
