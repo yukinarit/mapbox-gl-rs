@@ -56,7 +56,7 @@ fn use_map(geojson: GeoJson) -> Rc<RefCell<Option<MapFactory>>> {
                         let point = feature["geometry"]["coordinates"].as_array().unwrap();
                         let lnglat =
                             LngLat::new(point[0].as_f64().unwrap(), point[1].as_f64().unwrap());
-                        let marker = Marker::new(lnglat, marker_options);
+                        let marker = Marker::with_options(lnglat, marker_options);
                         marker.add_to(&m.map);
                     }
                 }

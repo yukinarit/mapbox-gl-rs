@@ -1,8 +1,8 @@
 use futures::channel::oneshot;
 use log::info;
-use mapboxgl::marker::{MarkerBundle, MarkerEventListener};
 use mapboxgl::{
-    event, LngLat, Map, MapEventListener, MapFactory, MapOptions, Marker, MarkerOptions,
+    event, LngLat, Map, MapEventListener, MapFactory, MapOptions, Marker, MarkerEventListener,
+    MarkerOptions,
 };
 use std::{cell::RefCell, rc::Rc};
 use web_sys::{Document, Element};
@@ -52,10 +52,9 @@ fn use_map() -> Rc<RefCell<Option<MapFactory>>> {
                 // add marker
                 let mut marker_options = MarkerOptions::new();
                 marker_options.draggable = Some(true);
-                let marker = Marker::new(LngLat::new(0.0, 0.0), marker_options);
-                let mut mb = MarkerBundle::new(marker.into());
-                mb.set_listener(MarkerListener {});
-                let _id = m.add_marker(mb);
+                let marker =
+                    Marker::with_listener(LngLat::new(0.0, 0.0), marker_options, MarkerListener {});
+                m.add_marker(marker);
 
                 wasm_bindgen_futures::spawn_local(async move {
                     rx.await.unwrap();
