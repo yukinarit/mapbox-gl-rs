@@ -13,7 +13,6 @@ pub mod source;
 use anyhow::Result;
 use enclose::enclose;
 use log::*;
-use marker::MarkerBundle;
 use serde::{Deserialize, Serialize};
 use std::{
     cell::RefCell,
@@ -29,7 +28,7 @@ pub use error::Error;
 pub use handler::BoxZoomHandler;
 pub use image::{Image, ImageOptions};
 pub use layer::{Layer, Layout, LayoutProperty};
-pub use marker::{Marker, MarkerOptions};
+pub use marker::{Marker, MarkerEventListener, MarkerOptions};
 pub use popup::{Popup, PopupOptions};
 pub use source::GeoJsonSource;
 
@@ -526,7 +525,7 @@ impl_handler! {
 pub struct MapFactory {
     pub map: Rc<Map>,
     handle: Option<Handle>,
-    pub marker_map: HashMap<Uuid, MarkerBundle>,
+    pub markers: HashMap<Uuid, Rc<Marker>>,
 }
 
 pub struct Map {
@@ -546,7 +545,7 @@ impl MapFactory {
                 image_cbs: CallbackStore::new(),
             }),
             handle: None,
-            marker_map: HashMap::new(),
+            markers: HashMap::new(),
         })
     }
 
@@ -617,17 +616,17 @@ impl MapFactory {
         inner.on("styleimagemissing".into(), &handle.on_styleimagemissing);
     }
 
-    pub fn add_marker(&mut self, marker: MarkerBundle) -> Uuid {
+    pub fn add_marker(&mut self, marker: Rc<Marker>) -> Uuid {
         let uuid = Uuid::new_v4();
-        marker.marker.add_to(&self.map);
-        self.marker_map.insert(uuid, marker);
+        marker.add_to(&self.map);
+        self.markers.insert(uuid, marker);
         uuid
     }
 
     pub fn remove_marker(&mut self, id: Uuid) {
-        let marker = self.marker_map.get(&id).unwrap();
-        marker.marker.remove();
-        self.marker_map.remove(&id);
+        let marker = self.markers.get(&id).unwrap();
+        marker.remove();
+        self.markers.remove(&id);
     }
 }
 
