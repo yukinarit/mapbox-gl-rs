@@ -15,7 +15,7 @@ fn use_map(geojson: GeoJson) -> Rc<RefCell<Option<MapFactory>>> {
         let _map = map.clone();
         use_effect_with_deps(
             move |_| {
-                let m = create_map();
+                let mut m = create_map();
 
                 // create a marker element for each feature
                 let geo_value = geojson.to_json_value();
@@ -57,7 +57,7 @@ fn use_map(geojson: GeoJson) -> Rc<RefCell<Option<MapFactory>>> {
                         let lnglat =
                             LngLat::new(point[0].as_f64().unwrap(), point[1].as_f64().unwrap());
                         let marker = Marker::with_options(lnglat, marker_options);
-                        marker.add_to(&m.map);
+                        m.add_marker(marker);
                     }
                 }
             },
