@@ -9,6 +9,7 @@ pub mod layer;
 pub mod marker;
 pub mod popup;
 pub mod source;
+pub mod style;
 
 use anyhow::Result;
 use enclose::enclose;
@@ -31,6 +32,7 @@ pub use layer::{Layer, Layout, LayoutProperty};
 pub use marker::{Marker, MarkerEventListener, MarkerOptions};
 pub use popup::{Popup, PopupOptions};
 pub use source::GeoJsonSource;
+pub use style::StyleOptions;
 
 const DEFAULT_STYLE: &str = "mapbox://styles/mapbox/streets-v11";
 
@@ -696,6 +698,13 @@ impl Map {
         let handler::BoxZoomHandler { inner } = handler;
         self.inner
             .set_handler(&HandlerType::BoxZoom.to_string(), inner);
+    }
+
+    pub fn set_style(&self, style: impl Into<String>, options: crate::style::StyleOptions) {
+        self.inner.setStyle(
+            style.into(),
+            serde_wasm_bindgen::to_value(&options).unwrap(),
+        );
     }
 
     /// Add image resource.
