@@ -10,4 +10,5 @@ members = [
   "leptos-simple",
   "custom-icons-with-markers",
   "draggable-marker",
+  "change-map-style",
 ]
