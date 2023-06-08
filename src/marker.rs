@@ -53,10 +53,11 @@ impl_handler_for_marker! {
     (on_dragend, JsValue),
 }
 
+#[allow(unused_variables)]
 pub trait MarkerEventListener {
-    fn on_dragstart(&mut self, _m: Rc<Marker>, _e: event::MapBaseEvent) {}
-    fn on_drag(&mut self, _m: Rc<Marker>, _e: event::DragEvent) {}
-    fn on_dragend(&mut self, _m: Rc<Marker>, _e: event::DragEvent) {}
+    fn on_dragstart(&mut self, map: Rc<Marker>, e: event::MapBaseEvent) {}
+    fn on_drag(&mut self, map: Rc<Marker>, e: event::DragEvent) {}
+    fn on_dragend(&mut self, map: Rc<Marker>, e: event::DragEvent) {}
 }
 
 struct NoopListener;
