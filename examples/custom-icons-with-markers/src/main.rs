@@ -12,7 +12,6 @@ fn use_map(geojson: GeoJson) -> Rc<RefCell<Option<MapFactory>>> {
     let map = use_mut_ref(|| Option::<MapFactory>::None);
 
     {
-        let _map = map.clone();
         use_effect_with_deps(
             move |_| {
                 let mut m = create_map();
