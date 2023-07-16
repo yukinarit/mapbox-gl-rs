@@ -2,7 +2,7 @@ use anyhow::Context;
 use futures::channel::oneshot;
 use gloo::timers::future::TimeoutFuture;
 use log::*;
-use mapboxgl::{event, layer, Layer, LngLat, Map, MapEventListener, MapFactory, MapOptions};
+use mapboxgl::{event, layer, Layer, LngLat, Map, MapEventListener, MapOptions};
 use std::{cell::RefCell, ops::Deref, rc::Rc};
 use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::JsFuture;
@@ -14,7 +14,7 @@ type IntervalState = UseStateHandle<usize>;
 
 type RouteState = UseStateHandle<Option<geojson::FeatureCollection>>;
 
-type MapRef = Rc<RefCell<Option<MapFactory>>>;
+type MapRef = Rc<RefCell<Option<Rc<Map>>>>;
 
 /// Custom hook to update state on every interval.
 #[hook]
@@ -43,16 +43,16 @@ fn use_interval(milli: u32) -> IntervalState {
 
 #[hook]
 fn use_map() -> MapRef {
-    let map = use_mut_ref(|| Option::<MapFactory>::None);
+    let map = use_mut_ref(|| Option::<Rc<Map>>::None);
 
     {
         let map = map.clone();
         use_effect_with_deps(
             move |_| {
-                let mut m = create_map();
+                let m = create_map();
 
                 let (tx, rx) = oneshot::channel();
-                m.set_listener(Listener { tx: Some(tx) });
+                let _ = m.on(Listener { tx: Some(tx) }).unwrap();
 
                 wasm_bindgen_futures::spawn_local(async move {
                     rx.await.unwrap();
@@ -140,13 +140,13 @@ impl MapEventListener for Listener {
     }
 }
 
-pub fn create_map() -> MapFactory {
+pub fn create_map() -> Rc<Map> {
     let token = std::env!("MAPBOX_TOKEN");
 
     let opts = MapOptions::new(token.into(), "map".into())
         .center(LngLat::new(-122.019807, 45.632433))
         .zoom(15.0);
-    mapboxgl::MapFactory::new(opts).unwrap()
+    mapboxgl::Map::new(opts).unwrap()
 }
 
 fn update(map: MapRef, route: &RouteState, second: &IntervalState) -> anyhow::Result<()> {
@@ -154,7 +154,7 @@ fn update(map: MapRef, route: &RouteState, second: &IntervalState) -> anyhow::Re
     let borrowed = map.borrow();
     let map = borrowed.as_ref().context("Map is not loaded yet")?;
 
-    if let Some(source) = map.map.get_geojson_source("trace") {
+    if let Some(source) = map.get_geojson_source("trace") {
         // Subsequent update
         let path = subpath(json, *second.deref()).context("Invalid path")?;
         if let geojson::Value::LineString(coordinates) =
@@ -166,7 +166,7 @@ fn update(map: MapRef, route: &RouteState, second: &IntervalState) -> anyhow::Re
             );
             info!("latlng = {:?}", latlng);
             update_data(source, path);
-            map.map.pan_to(latlng);
+            map.pan_to(latlng);
         }
     } else {
         // First update
@@ -177,11 +177,10 @@ fn update(map: MapRef, route: &RouteState, second: &IntervalState) -> anyhow::Re
     Ok(())
 }
 
-fn add_data(f: &MapFactory, json: geojson::FeatureCollection) -> anyhow::Result<()> {
-    f.map
-        .add_geojson_source("trace", geojson::GeoJson::FeatureCollection(json))?;
+fn add_data(map: &Map, json: geojson::FeatureCollection) -> anyhow::Result<()> {
+    map.add_geojson_source("trace", geojson::GeoJson::FeatureCollection(json))?;
 
-    f.map.add_layer(&Layer {
+    map.add_layer(&Layer {
         id: "trace".into(),
         r#type: "line".into(),
         source: "trace".into(),
