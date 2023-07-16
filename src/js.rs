@@ -99,6 +99,14 @@ extern "C" {
     #[wasm_bindgen(method)]
     pub fn on(this: &Map, r#type: String, callback: &Closure<dyn Fn(JsValue)>);
 
+    #[wasm_bindgen(method, js_name=on)]
+    pub fn on_layer(
+        this: &Map,
+        r#type: String,
+        layer_id: String,
+        callback: &Closure<dyn Fn(JsValue)>,
+    );
+
     #[wasm_bindgen(method)]
     pub fn getContainer(this: &Map) -> web_sys::HtmlElement;
 

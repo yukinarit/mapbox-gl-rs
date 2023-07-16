@@ -1,5 +1,5 @@
 use geojson::GeoJson;
-use mapboxgl::{LngLat, MapFactory, MapOptions, Marker, MarkerOptions};
+use mapboxgl::{LngLat, Map, MapOptions, Marker, MarkerOptions};
 use std::str::FromStr;
 use std::{cell::RefCell, rc::Rc};
 use wasm_bindgen::JsCast;
@@ -8,13 +8,13 @@ use yew::prelude::*;
 use yew::{use_effect_with_deps, use_mut_ref};
 
 #[hook]
-fn use_map(geojson: GeoJson) -> Rc<RefCell<Option<MapFactory>>> {
-    let map = use_mut_ref(|| Option::<MapFactory>::None);
+fn use_map(geojson: GeoJson) -> Rc<RefCell<Option<Rc<Map>>>> {
+    let map = use_mut_ref(|| Option::<Rc<Map>>::None);
 
     {
         use_effect_with_deps(
             move |_| {
-                let mut m = create_map();
+                let m = create_map();
 
                 // create a marker element for each feature
                 let geo_value = geojson.to_json_value();
@@ -67,7 +67,7 @@ fn use_map(geojson: GeoJson) -> Rc<RefCell<Option<MapFactory>>> {
     map
 }
 
-pub fn create_map() -> MapFactory {
+pub fn create_map() -> Rc<Map> {
     let token = std::env!("MAPBOX_TOKEN");
 
     let opts = MapOptions::new(token.into(), "map".into())
@@ -75,7 +75,7 @@ pub fn create_map() -> MapFactory {
         .zoom(5.0)
         .style("mapbox://styles/mapbox/streets-v12".into());
 
-    mapboxgl::MapFactory::new(opts).unwrap()
+    Map::new(opts).unwrap()
 }
 
 #[function_component(App)]

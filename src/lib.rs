@@ -11,7 +11,7 @@ pub mod popup;
 pub mod source;
 pub mod style;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use enclose::enclose;
 use log::*;
 use serde::{Deserialize, Serialize};
@@ -436,11 +436,11 @@ macro_rules! impl_event {
                             if let Ok(mut f) = $f.try_borrow_mut() {
                                 f.deref_mut().$event(map, e);
                             } else {
-                                error!("Event handler is being called somewhere.");
+                                error!("Could not borrow {} handler. Handler is being called somewhere?", stringify!($event));
                             }
                         },
                         Err(e) => {
-                            error!("Failed to deserialize Event: {}", e);
+                            error!("Failed to deserialize Event: {e}");
                         }
                     }
                 }
@@ -459,7 +459,7 @@ macro_rules! impl_event {
                     if let Ok(mut f) = $f.try_borrow_mut() {
                         f.deref_mut().$event(map, value.as_string().unwrap());
                     } else {
-                        error!("Event handler is being called somewhere.");
+                        error!("Could not borrow {} handler. Handler is being called somewhere?", stringify!($event));
                     }
                 }
             ))
@@ -525,39 +525,47 @@ impl_handler! {
     (on_styleimagemissing, JsValue),
 }
 
-pub struct MapFactory {
-    pub map: Rc<Map>,
-    handle: Option<Handle>,
-    pub markers: HashMap<Uuid, Rc<Marker>>,
-}
-
 pub struct Map {
     pub(crate) inner: crate::js::Map,
+    pub(crate) handles: RefCell<HashMap<Uuid, Handle>>,
+    pub(crate) markers: RefCell<HashMap<Uuid, Rc<Marker>>>,
     pub(crate) image_cbs: CallbackStore<dyn FnMut(JsValue, JsValue) + 'static>,
+    pub(crate) weak_self: RefCell<Option<Weak<Map>>>,
 }
 
-impl MapFactory {
-    pub fn new(options: MapOptions) -> Result<MapFactory> {
+impl Map {
+    pub fn new(options: MapOptions) -> Result<Rc<Map>> {
         let options = options.build();
 
         let inner = crate::js::Map::new(options);
 
-        Ok(MapFactory {
-            map: Rc::new(Map {
-                inner,
-                image_cbs: CallbackStore::new(),
-            }),
-            handle: None,
-            markers: HashMap::new(),
-        })
+        let map = Rc::new(Map {
+            inner,
+            handles: RefCell::new(HashMap::new()),
+            markers: RefCell::new(HashMap::new()),
+            image_cbs: CallbackStore::new(),
+            weak_self: RefCell::new(None),
+        });
+
+        let weak_self = Rc::downgrade(&map);
+
+        *map.weak_self.try_borrow_mut()? = Some(weak_self);
+
+        Ok(map)
     }
 
-    pub fn set_listener<F: MapEventListener + 'static>(&mut self, f: F) {
-        let map = Rc::downgrade(&self.map);
-        self.handle = Some(Handle::new(map, f));
-        let handle = self.handle.as_ref().unwrap();
+    /// Add a listener to a specified event type.
+    pub fn on<F: MapEventListener + 'static>(&self, f: F) -> Result<Uuid> {
+        let handle = Handle::new(
+            self.weak_self
+                .try_borrow()
+                .context("Could not borrow weak_self")?
+                .clone()
+                .context("Weak reference is missing")?,
+            f,
+        );
+        let inner = &self.inner;
 
-        let inner = &self.map.inner;
         inner.on("resize".into(), &handle.on_resize);
         inner.on("remove".into(), &handle.on_remove);
 
@@ -617,19 +625,161 @@ impl MapFactory {
         inner.on("styledataloading".into(), &handle.on_styledataloading);
         inner.on("sourcedataloading".into(), &handle.on_sourcedataloading);
         inner.on("styleimagemissing".into(), &handle.on_styleimagemissing);
+
+        let uuid = Uuid::new_v4();
+        self.handles
+            .try_borrow_mut()
+            .context("Could not get lock for handles")?
+            .insert(uuid, handle);
+
+        Ok(uuid)
     }
 
-    pub fn add_marker(&mut self, marker: Rc<Marker>) -> Uuid {
+    /// Add a listener to a specified event type and layer.
+    pub fn on_layer<F: MapEventListener + 'static>(&self, layer_id: &str, f: F) -> Result<Uuid> {
+        let handle = Handle::new(
+            self.weak_self
+                .try_borrow()
+                .context("Could not borrow weak_self")?
+                .clone()
+                .context("Weak reference is missing")?,
+            f,
+        );
+        let inner = &self.inner;
+
+        inner.on_layer("resize".into(), layer_id.into(), &handle.on_resize);
+        inner.on_layer("remove".into(), layer_id.into(), &handle.on_remove);
+
+        // Interaction
+        inner.on_layer("mousedown".into(), layer_id.into(), &handle.on_mousedown);
+        inner.on_layer("mouseup".into(), layer_id.into(), &handle.on_mouseup);
+        inner.on_layer("preclick".into(), layer_id.into(), &handle.on_preclick);
+        inner.on_layer("click".into(), layer_id.into(), &handle.on_click);
+        inner.on_layer("dblclick".into(), layer_id.into(), &handle.on_dblclick);
+        inner.on_layer("mousemove".into(), layer_id.into(), &handle.on_mousemove);
+        inner.on_layer("mouseover".into(), layer_id.into(), &handle.on_mouseover);
+        inner.on_layer("mouseenter".into(), layer_id.into(), &handle.on_mouseenter);
+        inner.on_layer("mouseleave".into(), layer_id.into(), &handle.on_mouseleave);
+        inner.on_layer("mouseout".into(), layer_id.into(), &handle.on_mouseout);
+        inner.on_layer(
+            "contextmenu".into(),
+            layer_id.into(),
+            &handle.on_contextmenu,
+        );
+        inner.on_layer("touchstart".into(), layer_id.into(), &handle.on_touchstart);
+        inner.on_layer("touchend".into(), layer_id.into(), &handle.on_touchend);
+        inner.on_layer(
+            "touchcancel".into(),
+            layer_id.into(),
+            &handle.on_touchcancel,
+        );
+        inner.on_layer("wheel".into(), layer_id.into(), &handle.on_wheel);
+
+        // Movement
+        inner.on_layer("movestart".into(), layer_id.into(), &handle.on_movestart);
+        inner.on_layer("move".into(), layer_id.into(), &handle.on_move);
+        inner.on_layer("moveend".into(), layer_id.into(), &handle.on_moveend);
+        inner.on_layer("dragstart".into(), layer_id.into(), &handle.on_dragstart);
+        inner.on_layer("drag".into(), layer_id.into(), &handle.on_drag);
+        inner.on_layer("dragend".into(), layer_id.into(), &handle.on_dragend);
+        inner.on_layer("zoomstart".into(), layer_id.into(), &handle.on_zoomstart);
+        inner.on_layer("zoom".into(), layer_id.into(), &handle.on_zoom);
+        inner.on_layer("zoomend".into(), layer_id.into(), &handle.on_zoomend);
+        inner.on_layer(
+            "rotatestart".into(),
+            layer_id.into(),
+            &handle.on_rotatestart,
+        );
+        inner.on_layer("rotate".into(), layer_id.into(), &handle.on_rotate);
+        inner.on_layer("rotateend".into(), layer_id.into(), &handle.on_rotateend);
+        inner.on_layer("pitchstart".into(), layer_id.into(), &handle.on_pitchstart);
+        inner.on_layer("pitch".into(), layer_id.into(), &handle.on_pitch);
+        inner.on_layer("pitchend".into(), layer_id.into(), &handle.on_pitchend);
+        inner.on_layer(
+            "boxzoomstart".into(),
+            layer_id.into(),
+            &handle.on_boxzoomstart,
+        );
+        inner.on_layer("boxzoomend".into(), layer_id.into(), &handle.on_boxzoomend);
+        inner.on_layer(
+            "boxzoomcancel".into(),
+            layer_id.into(),
+            &handle.on_boxzoomcancel,
+        );
+
+        // Lifecycle
+        inner.on_layer("load".into(), layer_id.into(), &handle.on_load);
+        inner.on_layer("render".into(), layer_id.into(), &handle.on_render);
+        inner.on_layer("idle".into(), layer_id.into(), &handle.on_idle);
+        inner.on_layer("error".into(), layer_id.into(), &handle.on_error);
+        inner.on_layer(
+            "webglcontextlost".into(),
+            layer_id.into(),
+            &handle.on_webglcontextlost,
+        );
+        inner.on_layer(
+            "webglcontextrestored".into(),
+            layer_id.into(),
+            &handle.on_webglcontextrestored,
+        );
+
+        // Data loading
+        inner.on_layer("data".into(), layer_id.into(), &handle.on_data);
+        inner.on_layer("styledata".into(), layer_id.into(), &handle.on_styledata);
+        inner.on_layer("sourcedata".into(), layer_id.into(), &handle.on_sourcedata);
+        inner.on_layer(
+            "dataloading".into(),
+            layer_id.into(),
+            &handle.on_dataloading,
+        );
+        inner.on_layer(
+            "styledataloading".into(),
+            layer_id.into(),
+            &handle.on_styledataloading,
+        );
+        inner.on_layer(
+            "sourcedataloading".into(),
+            layer_id.into(),
+            &handle.on_sourcedataloading,
+        );
+        inner.on_layer(
+            "styleimagemissing".into(),
+            layer_id.into(),
+            &handle.on_styleimagemissing,
+        );
+
         let uuid = Uuid::new_v4();
-        marker.add_to(&self.map);
-        self.markers.insert(uuid, marker);
+        self.handles
+            .try_borrow_mut()
+            .context("Could not get lock for handles")?
+            .insert(uuid, handle);
+
+        Ok(uuid)
+    }
+
+    pub fn add_marker(&self, marker: Rc<Marker>) -> Uuid {
+        let uuid = Uuid::new_v4();
+        marker.add_to(self);
+        self.markers
+            .try_borrow_mut()
+            .expect("Could not get lock for markders")
+            .insert(uuid, marker);
+
         uuid
     }
 
     pub fn remove_marker(&mut self, id: Uuid) {
-        let marker = self.markers.get(&id).unwrap();
-        marker.remove();
-        self.markers.remove(&id);
+        self.markers
+            .try_borrow_mut()
+            .expect("Could not get lock for markders")
+            .get(&id)
+            .unwrap()
+            .remove();
+
+        self.markers
+            .try_borrow_mut()
+            .expect("Could not get lock for markders")
+            .remove(&id);
     }
 }
 

@@ -1,6 +1,6 @@
 use futures::channel::oneshot;
 use log::*;
-use mapboxgl::{event, layer, Layer, LngLat, Map, MapEventListener, MapFactory, MapOptions};
+use mapboxgl::{event, layer, Layer, LngLat, Map, MapEventListener, MapOptions};
 use std::{cell::RefCell, rc::Rc};
 use yew::prelude::*;
 use yew::{use_effect_with_deps, use_mut_ref};
@@ -69,17 +69,17 @@ impl MapEventListener for Listener {
 }
 
 #[hook]
-fn use_map() -> Rc<RefCell<Option<MapFactory>>> {
-    let map = use_mut_ref(|| Option::<MapFactory>::None);
+fn use_map() -> Rc<RefCell<Option<Rc<Map>>>> {
+    let map = use_mut_ref(|| Option::<Rc<Map>>::None);
 
     {
         let map = map.clone();
         use_effect_with_deps(
             move |_| {
-                let mut m = create_map();
+                let m = create_map();
 
                 let (tx, rx) = oneshot::channel();
-                m.set_listener(Listener { tx: Some(tx) });
+                let _ = m.on(Listener { tx: Some(tx) }).unwrap();
 
                 wasm_bindgen_futures::spawn_local(async move {
                     rx.await.unwrap();
@@ -108,14 +108,14 @@ fn app() -> Html {
     }
 }
 
-pub fn create_map() -> MapFactory {
+pub fn create_map() -> Rc<Map> {
     let token = std::env!("MAPBOX_TOKEN");
 
     let opts = MapOptions::new(token.into(), "map".into())
         .center(LngLat::new(-122.486052, 37.830348))
         .zoom(15.0);
 
-    mapboxgl::MapFactory::new(opts).unwrap()
+    Map::new(opts).unwrap()
 }
 
 fn main() {

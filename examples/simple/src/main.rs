@@ -1,11 +1,11 @@
-use mapboxgl::{LngLat, MapFactory, MapOptions};
+use mapboxgl::{LngLat, Map, MapOptions};
 use std::{cell::RefCell, rc::Rc};
 use yew::prelude::*;
 use yew::{use_effect_with_deps, use_mut_ref};
 
 #[hook]
-fn use_map() -> Rc<RefCell<Option<MapFactory>>> {
-    let map = use_mut_ref(|| Option::<MapFactory>::None);
+fn use_map() -> Rc<RefCell<Option<Rc<Map>>>> {
+    let map = use_mut_ref(|| Option::<Rc<Map>>::None);
 
     {
         let map = map.clone();
@@ -34,14 +34,14 @@ fn app() -> Html {
     }
 }
 
-pub fn create_map() -> MapFactory {
+pub fn create_map() -> Rc<Map> {
     let token = std::env!("MAPBOX_TOKEN");
 
     let opts = MapOptions::new(token.into(), "map".into())
         .center(LngLat::new(139.7647863, 35.6812373))
         .zoom(15.0);
 
-    mapboxgl::MapFactory::new(opts).unwrap()
+    Map::new(opts).unwrap()
 }
 
 fn main() {

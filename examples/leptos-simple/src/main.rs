@@ -1,10 +1,10 @@
 use leptos::*;
-use mapboxgl::{LngLat, MapFactory, MapOptions};
+use mapboxgl::{LngLat, Map, MapOptions};
 
 fn main() {
     let token = std::env!("MAPBOX_TOKEN");
     mount_to_body(|cx| view! { cx,  <Map/> });
-    let _map = MapFactory::new(
+    let _map = Map::new(
         MapOptions::new(token.into(), "map".into())
             .center(LngLat::new(139.7647863, 35.6812373))
             .zoom(15.0),

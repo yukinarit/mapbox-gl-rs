@@ -1,6 +1,6 @@
 use futures::channel::oneshot;
-use log::info;
-use mapboxgl::{event, LngLat, Map, MapEventListener, MapFactory, MapOptions, StyleOptions};
+use log::*;
+use mapboxgl::{event, LngLat, Map, MapEventListener, MapOptions, StyleOptions};
 use std::{cell::RefCell, rc::Rc};
 use web_sys::HtmlInputElement;
 use yew::prelude::*;
@@ -17,16 +17,16 @@ impl MapEventListener for Listener {
 }
 
 #[hook]
-fn use_map() -> Rc<RefCell<Option<MapFactory>>> {
-    let map = use_mut_ref(|| Option::<MapFactory>::None);
+fn use_map() -> Rc<RefCell<Option<Rc<Map>>>> {
+    let map = use_mut_ref(|| Option::<Rc<Map>>::None);
 
     {
         let map = map.clone();
         use_effect_with_deps(
             move |_| {
-                let mut m = create_map();
+                let m = create_map();
                 let (tx, rx) = oneshot::channel();
-                m.set_listener(Listener { tx: Some(tx) });
+                let _ = m.on(Listener { tx: Some(tx) }).unwrap();
 
                 wasm_bindgen_futures::spawn_local(async move {
                     rx.await.unwrap();
@@ -34,7 +34,7 @@ fn use_map() -> Rc<RefCell<Option<MapFactory>>> {
                         info!("map loaded");
                         map.replace(m);
                     } else {
-                        log::error!("Failed to create Map");
+                        error!("Failed to create Map");
                     }
                 });
                 || {}
@@ -45,14 +45,14 @@ fn use_map() -> Rc<RefCell<Option<MapFactory>>> {
     map
 }
 
-pub fn create_map() -> MapFactory {
+pub fn create_map() -> Rc<Map> {
     let token = std::env!("MAPBOX_TOKEN");
 
     let opts = MapOptions::new(token.into(), "map".into())
         .center(LngLat::new(-2.81361, 36.77271))
         .zoom(13.0)
         .style("mapbox://styles/mapbox/satellite-streets-v12".into());
-    mapboxgl::MapFactory::new(opts).unwrap()
+    Map::new(opts).unwrap()
 }
 
 #[function_component(App)]
@@ -65,7 +65,6 @@ fn app() -> Html {
             map.borrow_mut()
                 .as_ref()
                 .unwrap()
-                .map
                 .set_style(style, StyleOptions::new());
         })
     };
