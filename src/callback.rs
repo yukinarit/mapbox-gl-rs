@@ -1,12 +1,14 @@
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
-use uuid::Uuid;
 use wasm_bindgen::prelude::*;
 
-use crate::error::{Error, Result};
+use crate::{
+    error::{Error, Result},
+    id::CallbackId,
+};
 
 /// Store Closure while it's being used in JavaScript.
 pub struct CallbackStore<T: ?Sized> {
-    cbs: Rc<RefCell<HashMap<Uuid, Closure<T>>>>,
+    cbs: Rc<RefCell<HashMap<CallbackId, Closure<T>>>>,
 }
 
 impl<T> Clone for CallbackStore<T>
@@ -30,7 +32,7 @@ where
         }
     }
 
-    pub fn add(&self, id: Uuid, cb: Closure<T>) -> Result<()> {
+    pub fn add(&self, id: CallbackId, cb: Closure<T>) -> Result<()> {
         match self.cbs.try_borrow_mut() {
             Ok(mut cbs) => {
                 cbs.insert(id, cb);
@@ -40,7 +42,7 @@ where
         }
     }
 
-    pub fn remove(&self, id: &Uuid) -> Result<()> {
+    pub fn remove(&self, id: &CallbackId) -> Result<()> {
         match self.cbs.try_borrow_mut() {
             Ok(mut cbs) => {
                 cbs.remove(id);

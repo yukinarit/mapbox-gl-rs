@@ -3,6 +3,7 @@ mod callback;
 pub mod error;
 pub mod event;
 pub mod handler;
+mod id;
 pub mod image;
 mod js;
 pub mod layer;
@@ -21,12 +22,12 @@ use std::{
     ops::DerefMut,
     rc::{Rc, Weak},
 };
-use uuid::Uuid;
 use wasm_bindgen::{prelude::*, JsCast};
 
 use callback::CallbackStore;
 pub use error::Error;
 pub use handler::BoxZoomHandler;
+pub use id::{CallbackId, MapListenerId, MarkerId};
 pub use image::{Image, ImageOptions};
 pub use layer::{Layer, Layout, LayoutProperty};
 pub use marker::{Marker, MarkerEventListener, MarkerOptions};
@@ -527,8 +528,8 @@ impl_handler! {
 
 pub struct Map {
     pub(crate) inner: crate::js::Map,
-    pub(crate) handles: RefCell<HashMap<Uuid, Handle>>,
-    pub(crate) markers: RefCell<HashMap<Uuid, Rc<Marker>>>,
+    pub(crate) handles: RefCell<HashMap<MapListenerId, Handle>>,
+    pub(crate) markers: RefCell<HashMap<MarkerId, Rc<Marker>>>,
     pub(crate) image_cbs: CallbackStore<dyn FnMut(JsValue, JsValue) + 'static>,
     pub(crate) weak_self: RefCell<Option<Weak<Map>>>,
 }
@@ -555,7 +556,7 @@ impl Map {
     }
 
     /// Add a listener to a specified event type.
-    pub fn on<F: MapEventListener + 'static>(&self, f: F) -> Result<Uuid> {
+    pub fn on<F: MapEventListener + 'static>(&self, f: F) -> Result<MapListenerId> {
         let handle = Handle::new(
             self.weak_self
                 .try_borrow()
@@ -626,17 +627,21 @@ impl Map {
         inner.on("sourcedataloading".into(), &handle.on_sourcedataloading);
         inner.on("styleimagemissing".into(), &handle.on_styleimagemissing);
 
-        let uuid = Uuid::new_v4();
+        let id = MapListenerId(uuid::Uuid::new_v4());
         self.handles
             .try_borrow_mut()
             .context("Could not get lock for handles")?
-            .insert(uuid, handle);
+            .insert(id, handle);
 
-        Ok(uuid)
+        Ok(id)
     }
 
     /// Add a listener to a specified event type and layer.
-    pub fn on_layer<F: MapEventListener + 'static>(&self, layer_id: &str, f: F) -> Result<Uuid> {
+    pub fn on_layer<F: MapEventListener + 'static>(
+        &self,
+        layer_id: &str,
+        f: F,
+    ) -> Result<MapListenerId> {
         let handle = Handle::new(
             self.weak_self
                 .try_borrow()
@@ -748,38 +753,38 @@ impl Map {
             &handle.on_styleimagemissing,
         );
 
-        let uuid = Uuid::new_v4();
+        let id = MapListenerId(uuid::Uuid::new_v4());
         self.handles
             .try_borrow_mut()
             .context("Could not get lock for handles")?
-            .insert(uuid, handle);
+            .insert(id, handle);
 
-        Ok(uuid)
+        Ok(id)
     }
 
-    pub fn add_marker(&self, marker: Rc<Marker>) -> Uuid {
-        let uuid = Uuid::new_v4();
+    pub fn add_marker(&self, marker: Rc<Marker>) -> MarkerId {
+        let id = MarkerId(uuid::Uuid::new_v4());
         marker.add_to(self);
         self.markers
             .try_borrow_mut()
             .expect("Could not get lock for markders")
-            .insert(uuid, marker);
+            .insert(id, marker);
 
-        uuid
+        id
     }
 
-    pub fn remove_marker(&mut self, id: Uuid) {
+    pub fn remove_marker(&mut self, id: &MarkerId) {
         self.markers
             .try_borrow_mut()
             .expect("Could not get lock for markders")
-            .get(&id)
+            .get(id)
             .unwrap()
             .remove();
 
         self.markers
             .try_borrow_mut()
             .expect("Could not get lock for markders")
-            .remove(&id);
+            .remove(id);
     }
 }
 
@@ -901,7 +906,7 @@ impl Map {
         url: impl Into<String>,
         mut callback: impl FnMut(crate::error::Result<crate::image::Image>) + 'static,
     ) {
-        let callback_id = Uuid::new_v4();
+        let callback_id = CallbackId(uuid::Uuid::new_v4());
         let cbs = self.image_cbs.clone();
 
         let callback = Closure::new(move |e: JsValue, image| {
