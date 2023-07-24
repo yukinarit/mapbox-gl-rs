@@ -773,7 +773,7 @@ impl Map {
         id
     }
 
-    pub fn remove_marker(&mut self, id: &MarkerId) {
+    pub fn remove_marker(&self, id: &MarkerId) {
         self.markers
             .try_borrow_mut()
             .expect("Could not get lock for markders")
