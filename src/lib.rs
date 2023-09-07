@@ -2,6 +2,7 @@
 mod callback;
 pub mod error;
 pub mod event;
+mod geometry;
 pub mod handler;
 mod id;
 pub mod image;
@@ -26,6 +27,7 @@ use wasm_bindgen::{prelude::*, JsCast};
 
 use callback::CallbackStore;
 pub use error::Error;
+use geometry::IntoQueryGeometry;
 pub use handler::BoxZoomHandler;
 pub use id::{CallbackId, MapListenerId, MarkerId};
 pub use image::{Image, ImageOptions};
@@ -802,6 +804,25 @@ impl ToString for HandlerType {
     }
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct QueryFeatureOptions {
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub filters: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub layers: Vec<String>,
+    pub validate: bool,
+}
+
+impl Default for QueryFeatureOptions {
+    fn default() -> Self {
+        QueryFeatureOptions {
+            filters: Vec::default(),
+            layers: Vec::default(),
+            validate: true,
+        }
+    }
+}
+
 impl Map {
     pub fn get_container(&self) -> web_sys::HtmlElement {
         self.inner.getContainer()
@@ -941,6 +962,59 @@ impl Map {
         );
 
         Ok(())
+    }
+
+    pub fn query_rendered_features<G: IntoQueryGeometry>(
+        &self,
+        geometry: Option<G>,
+        _options: QueryFeatureOptions,
+    ) -> anyhow::Result<Vec<geojson::Feature>> {
+        // It seems GeoJSON returned from mapbox-gl-js queryRenderedFeatures contains
+        // byte array, which causes deserialize error with geojson crate. geojson
+        // crate internally deserialize all the properties into Map.
+        //
+        // As a workaround, use an intermediate "Feature" struct to deserialize from
+        // JsValue using serde, then convert it to geojson::Feature.
+        #[derive(Debug, serde::Deserialize)]
+        #[serde(untagged)]
+        enum Id {
+            String(String),
+            Number(serde_json::Number),
+        }
+
+        #[derive(Debug, serde::Deserialize)]
+        struct Feature {
+            bbox: Option<geojson::Bbox>,
+            geometry: Option<geojson::Geometry>,
+            id: Option<Id>,
+            properties: Option<geojson::JsonObject>,
+            foreign_members: Option<geojson::JsonObject>,
+        }
+        let res = self.inner.queryRenderedFeatures(
+            serde_wasm_bindgen::to_value(&geometry.map(|g| g.into_query_geometry())).unwrap(),
+            // TODO: Investigate why TypeError is raised
+            //serde_wasm_bindgen::to_value(&options).unwrap(),
+        );
+
+        let features: Vec<Feature> = serde_wasm_bindgen::from_value(res).map_err(|e| {
+            anyhow::anyhow!("Failed to deserialize into intermediate features: {e}")
+        })?;
+
+        features
+            .into_iter()
+            .map(|f| {
+                anyhow::Result::Ok(geojson::Feature {
+                    bbox: f.bbox,
+                    geometry: f.geometry,
+                    id: f.id.map(|id| match id {
+                        Id::String(s) => geojson::feature::Id::String(s),
+                        Id::Number(n) => geojson::feature::Id::Number(n),
+                    }),
+                    properties: f.properties,
+                    foreign_members: f.foreign_members,
+                })
+            })
+            .collect()
     }
 
     pub fn add_geojson_source(

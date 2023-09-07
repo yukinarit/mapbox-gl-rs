@@ -11,4 +11,5 @@ members = [
   "custom-icons-with-markers",
   "draggable-marker",
   "change-map-style",
+  "get-features-under-the-mouse-pointer",
 ]
