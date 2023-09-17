@@ -1,3 +1,4 @@
+use crate::LngLatBounds;
 use serde::{Deserialize, Serialize};
 
 pub trait IntoQueryGeometry {
@@ -57,6 +58,19 @@ impl IntoQueryGeometry for crate::event::Point {
         QueryGeometry::Point {
             lng: self.x,
             lat: self.y,
+        }
+    }
+}
+
+impl IntoQueryGeometry for LngLatBounds {
+    fn into_query_geometry(self) -> QueryGeometry {
+        let sw = self.get_south_west();
+        let ne = self.get_north_east();
+        QueryGeometry::BBox {
+            west: sw.lng(),
+            south: sw.lat(),
+            east: ne.lng(),
+            north: ne.lat(),
         }
     }
 }

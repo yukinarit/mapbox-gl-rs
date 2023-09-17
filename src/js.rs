@@ -169,10 +169,7 @@ extern "C" {
     pub fn triggerRepaint(this: &Map);
 
     #[wasm_bindgen(method)]
-    pub fn queryRenderedFeatures(
-        map: &Map,
-        geometry: JsValue, /*, options: JsValue*/
-    ) -> JsValue;
+    pub fn queryRenderedFeatures(map: &Map, geometry: JsValue, options: JsValue) -> JsValue;
 
     #[wasm_bindgen(method)]
     pub fn addSource(this: &Map, id: String, source: JsValue);
