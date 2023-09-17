@@ -804,23 +804,14 @@ impl ToString for HandlerType {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Default, Serialize, Deserialize)]
 pub struct QueryFeatureOptions {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub filters: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub layers: Vec<String>,
-    pub validate: bool,
-}
-
-impl Default for QueryFeatureOptions {
-    fn default() -> Self {
-        QueryFeatureOptions {
-            filters: Vec::default(),
-            layers: Vec::default(),
-            validate: true,
-        }
-    }
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub validate: Option<bool>,
 }
 
 impl Map {
@@ -967,7 +958,7 @@ impl Map {
     pub fn query_rendered_features<G: IntoQueryGeometry>(
         &self,
         geometry: Option<G>,
-        _options: QueryFeatureOptions,
+        options: QueryFeatureOptions,
     ) -> anyhow::Result<Vec<geojson::Feature>> {
         // It seems GeoJSON returned from mapbox-gl-js queryRenderedFeatures contains
         // byte array, which causes deserialize error with geojson crate. geojson
@@ -991,9 +982,9 @@ impl Map {
             foreign_members: Option<geojson::JsonObject>,
         }
         let res = self.inner.queryRenderedFeatures(
-            serde_wasm_bindgen::to_value(&geometry.map(|g| g.into_query_geometry())).unwrap(),
-            // TODO: Investigate why TypeError is raised
-            //serde_wasm_bindgen::to_value(&options).unwrap(),
+            serde_wasm_bindgen::to_value(&geometry.map(|g| g.into_query_geometry().into_vec()))
+                .unwrap(),
+            serde_wasm_bindgen::to_value(&options).unwrap(),
         );
 
         let features: Vec<Feature> = serde_wasm_bindgen::from_value(res).map_err(|e| {

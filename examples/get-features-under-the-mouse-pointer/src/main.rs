@@ -1,6 +1,7 @@
 use futures::channel::oneshot;
 use log::*;
 use mapboxgl::{event, LngLat, Map, MapEventListener, MapOptions, QueryFeatureOptions};
+use serde::Serialize;
 use std::{cell::RefCell, rc::Rc};
 use yew::prelude::*;
 use yew::{use_effect_with_deps, use_mut_ref};
@@ -14,33 +15,29 @@ impl MapEventListener for Listener {
         self.tx.take().unwrap().send(()).unwrap();
     }
 
-    fn on_click(&mut self, map: Rc<Map>, e: event::MapMouseEvent) {
+    fn on_mousemove(&mut self, map: Rc<Map>, e: event::MapMouseEvent) {
         let features = map
-            .query_rendered_features(Some(e.point), Default::default())
+            .query_rendered_features(
+                Some(e.point),
+                QueryFeatureOptions {
+                    ..Default::default()
+                },
+            )
             .unwrap();
 
-        let display_properties = [
-            "type",
-            "properties",
-            "id",
-            "layer",
-            "source",
-            "sourceLayer",
-            "state",
-        ];
+        #[derive(Serialize)]
+        struct DisplayFeature {
+            r#type: &'static str,
+            id: Option<geojson::feature::Id>,
+            properties: Option<geojson::JsonObject>,
+        }
 
         let display_features: Vec<_> = features
             .into_iter()
-            .map(|mut f| {
-                let mut props = f.properties.take().unwrap();
-                let mut new_props = serde_json::Map::new();
-                for prop_name in display_properties {
-                    if let Some(v) = props.remove(prop_name) {
-                        new_props.insert(prop_name.into(), v);
-                    }
-                }
-                f.properties.replace(new_props);
-                f
+            .map(|f| DisplayFeature {
+                r#type: "Feature",
+                id: f.id,
+                properties: f.properties,
             })
             .collect();
 
