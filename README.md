@@ -72,7 +72,7 @@ trunk serve
     * [ ] [FullscreenControl](https://docs.mapbox.com/mapbox-gl-js/api/markers/#fullscreencontrol)
     * [ ] [GeolocateControl](https://docs.mapbox.com/mapbox-gl-js/api/markers/#geolocatecontrol)
     * [ ] [NavigationControl](https://docs.mapbox.com/mapbox-gl-js/api/markers/#navigationcontrol)
-    * [x] [Pupup](https://docs.mapbox.com/mapbox-gl-js/api/markers/#popup)
+    * [x] [Popup](https://docs.mapbox.com/mapbox-gl-js/api/markers/#popup)
     * [ ] [ScaleControl](https://docs.mapbox.com/mapbox-gl-js/api/markers/#scalecontrol)
 * Geography and Geometry
     * [x] [LngLat](https://docs.mapbox.com/mapbox-gl-js/api/geography/#lnglat)
