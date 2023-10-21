@@ -1,14 +1,24 @@
 use serde::Serialize;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Layer {
     pub id: String,
-    pub r#type: String,
-    pub source: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub layout: Option<Layout>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub maxzoom: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub minzoom: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub paint: Option<Paint>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rendering_mode: Option<String>,
+    pub source: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "source-layer")]
+    pub source_layer: Option<String>,
+    pub r#type: String,
 }
 
 impl Layer {
@@ -19,10 +29,14 @@ impl Layer {
     ) -> Layer {
         Layer {
             id: id.into(),
-            r#type: r#type.into(),
-            source: source.into(),
             layout: None,
+            maxzoom: None,
+            minzoom: None,
             paint: None,
+            rendering_mode: None,
+            source: source.into(),
+            source_layer: None,
+            r#type: r#type.into(),
         }
     }
 }

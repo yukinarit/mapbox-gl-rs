@@ -194,6 +194,7 @@ fn add_data(map: &Map, json: geojson::FeatureCollection) -> anyhow::Result<()> {
             line_color: "yellow".into(),
             line_width: 8,
         }),
+        ..Default::default()
     })?;
 
     Ok(())
