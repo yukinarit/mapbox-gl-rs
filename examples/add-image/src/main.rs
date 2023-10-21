@@ -47,13 +47,13 @@ impl MapEventListener for Listener {
                         id: "points".into(),
                         r#type: "symbol".into(),
                         source: "point".into(),
-                        paint: None,
                         layout: Some(layer::Layout {
                             line_join: None,
                             line_cap: None,
                             icon_image: Some("cat".into()),
                             icon_size: Some(0.25.into()),
                         }),
+                        ..Default::default()
                     })
                     .unwrap();
                 }

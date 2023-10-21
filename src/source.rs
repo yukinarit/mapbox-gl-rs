@@ -1,3 +1,4 @@
+use crate::Result;
 use serde::Serialize;
 
 #[derive(Debug, Clone, Serialize)]
@@ -23,17 +24,11 @@ pub struct GeoJsonSource {
 }
 
 impl GeoJsonSource {
-    pub fn set_data(&mut self, data: geojson::GeoJson) -> anyhow::Result<()> {
+    pub fn set_data(&mut self, data: geojson::GeoJson) -> Result<()> {
         let ser = serde_wasm_bindgen::Serializer::new().serialize_maps_as_objects(true);
-        //let data = (&source::GeoJsonSourceSpec::new(data))
-        //    .serialize(&ser)
-        //    .map_err(|_| anyhow::anyhow!("Failed to convert GeoJson"))?;
 
-        self.inner.GeoJSONSource_setData(
-            &data
-                .serialize(&ser)
-                .map_err(|_| anyhow::anyhow!("Failed to convert GeoJson"))?,
-        );
+        self.inner.GeoJSONSource_setData(&data.serialize(&ser)?);
+
         Ok(())
     }
 }

@@ -63,6 +63,7 @@ impl MapEventListener for Listener {
                 line_color: "#888".into(),
                 line_width: 8,
             }),
+            ..Default::default()
         })
         .unwrap();
     }

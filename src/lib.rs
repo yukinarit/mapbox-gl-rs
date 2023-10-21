@@ -13,7 +13,6 @@ pub mod popup;
 pub mod source;
 pub mod style;
 
-use anyhow::{Context, Result};
 use enclose::enclose;
 use log::*;
 use serde::{Deserialize, Serialize};
@@ -26,7 +25,7 @@ use std::{
 use wasm_bindgen::{prelude::*, JsCast};
 
 use callback::CallbackStore;
-pub use error::Error;
+pub use error::{Error, Result};
 use geometry::IntoQueryGeometry;
 pub use handler::BoxZoomHandler;
 pub use id::{CallbackId, MapListenerId, MarkerId};
@@ -83,7 +82,7 @@ struct LngLatValue {
     lat: f64,
 }
 
-fn serialize_lnglat<S>(lnglat: &js::LngLat, ser: S) -> Result<S::Ok, S::Error>
+fn serialize_lnglat<S>(lnglat: &js::LngLat, ser: S) -> std::result::Result<S::Ok, S::Error>
 where
     S: serde::Serializer,
 {
@@ -95,7 +94,7 @@ where
     value.serialize(ser)
 }
 
-fn deserialize_lnglat<'de, D>(de: D) -> Result<js::LngLat, D::Error>
+fn deserialize_lnglat<'de, D>(de: D) -> std::result::Result<js::LngLat, D::Error>
 where
     D: serde::Deserializer<'de>,
 {
@@ -552,7 +551,9 @@ impl Map {
 
         let weak_self = Rc::downgrade(&map);
 
-        *map.weak_self.try_borrow_mut()? = Some(weak_self);
+        *map.weak_self
+            .try_borrow_mut()
+            .map_err(|e| Error::Unexpected(e.to_string()))? = Some(weak_self);
 
         Ok(map)
     }
@@ -562,9 +563,9 @@ impl Map {
         let handle = Handle::new(
             self.weak_self
                 .try_borrow()
-                .context("Could not borrow weak_self")?
+                .map_err(|e| Error::Unexpected(format!("Could not borrow weak_self: {e}")))?
                 .clone()
-                .context("Weak reference is missing")?,
+                .ok_or_else(|| Error::Unexpected("Weak reference is missing".to_string()))?,
             f,
         );
         let inner = &self.inner;
@@ -632,7 +633,7 @@ impl Map {
         let id = MapListenerId(uuid::Uuid::new_v4());
         self.handles
             .try_borrow_mut()
-            .context("Could not get lock for handles")?
+            .map_err(|e| Error::Unexpected(format!("Could not get lock for handles: {e}")))?
             .insert(id, handle);
 
         Ok(id)
@@ -647,9 +648,9 @@ impl Map {
         let handle = Handle::new(
             self.weak_self
                 .try_borrow()
-                .context("Could not borrow weak_self")?
+                .map_err(|e| Error::Unexpected(format!("Could not borrow weak_self: {e}")))?
                 .clone()
-                .context("Weak reference is missing")?,
+                .ok_or_else(|| Error::Unexpected("Weak reference is missing".to_string()))?,
             f,
         );
         let inner = &self.inner;
@@ -758,7 +759,7 @@ impl Map {
         let id = MapListenerId(uuid::Uuid::new_v4());
         self.handles
             .try_borrow_mut()
-            .context("Could not get lock for handles")?
+            .map_err(|e| Error::Unexpected(format!("Could not get lock for handles: {e}")))?
             .insert(id, handle);
 
         Ok(id)
@@ -819,7 +820,7 @@ impl Map {
         self.inner.getContainer()
     }
 
-    pub fn get_bounds(&self) -> anyhow::Result<LngLatBounds> {
+    pub fn get_bounds(&self) -> Result<LngLatBounds> {
         let bbox = self.inner.getBounds();
         Ok(LngLatBounds { inner: bbox })
     }
@@ -918,14 +919,16 @@ impl Map {
         url: impl Into<String>,
         mut callback: impl FnMut(crate::error::Result<crate::image::Image>) + 'static,
     ) {
+        let url = url.into();
         let callback_id = CallbackId(uuid::Uuid::new_v4());
         let cbs = self.image_cbs.clone();
 
+        let cloned_url = url.clone();
         let callback = Closure::new(move |e: JsValue, image| {
             if e.is_null() {
                 callback(Ok(crate::image::Image { inner: image }));
             } else {
-                callback(Err(Error::LoadImage(e)));
+                callback(Err(Error::LoadImage(cloned_url.clone())));
             }
 
             if let Err(e) = cbs.remove(&callback_id) {
@@ -933,7 +936,7 @@ impl Map {
             }
         });
 
-        self.inner.loadImage(url.into(), &callback);
+        self.inner.loadImage(url, &callback);
 
         if let Err(e) = self.image_cbs.add(callback_id, callback) {
             warn!("{e}");
@@ -947,10 +950,8 @@ impl Map {
     }
 
     pub fn add_layer(&self, layer: &layer::Layer) -> Result<()> {
-        self.inner.addLayer(
-            serde_wasm_bindgen::to_value(&layer)
-                .map_err(|_| anyhow::anyhow!("Failed to convert Layer"))?,
-        );
+        self.inner
+            .addLayer(serde_wasm_bindgen::to_value(&layer).map_err(Error::from)?);
 
         Ok(())
     }
@@ -959,7 +960,7 @@ impl Map {
         &self,
         geometry: Option<G>,
         options: QueryFeatureOptions,
-    ) -> anyhow::Result<Vec<geojson::Feature>> {
+    ) -> Result<Vec<geojson::Feature>> {
         // It seems GeoJSON returned from mapbox-gl-js queryRenderedFeatures contains
         // byte array, which causes deserialize error with geojson crate. geojson
         // crate internally deserialize all the properties into Map.
@@ -982,19 +983,16 @@ impl Map {
             foreign_members: Option<geojson::JsonObject>,
         }
         let res = self.inner.queryRenderedFeatures(
-            serde_wasm_bindgen::to_value(&geometry.map(|g| g.into_query_geometry().into_vec()))
-                .unwrap(),
-            serde_wasm_bindgen::to_value(&options).unwrap(),
+            serde_wasm_bindgen::to_value(&geometry.map(|g| g.into_query_geometry().into_vec()))?,
+            serde_wasm_bindgen::to_value(&options)?,
         );
 
-        let features: Vec<Feature> = serde_wasm_bindgen::from_value(res).map_err(|e| {
-            anyhow::anyhow!("Failed to deserialize into intermediate features: {e}")
-        })?;
+        let features: Vec<Feature> = serde_wasm_bindgen::from_value(res)?;
 
         features
             .into_iter()
             .map(|f| {
-                anyhow::Result::Ok(geojson::Feature {
+                Ok(geojson::Feature {
                     bbox: f.bbox,
                     geometry: f.geometry,
                     id: f.id.map(|id| match id {
@@ -1008,15 +1006,29 @@ impl Map {
             .collect()
     }
 
-    pub fn add_geojson_source(
-        &self,
-        id: impl Into<String>,
-        data: geojson::GeoJson,
-    ) -> anyhow::Result<()> {
+    pub fn add_vector_source(&self, id: impl Into<String>, url: impl Into<String>) -> Result<()> {
+        #[derive(Serialize)]
+        struct VectorSource {
+            r#type: String,
+            url: String,
+        }
+
+        self.inner.addSource(
+            id.into(),
+            serde_wasm_bindgen::to_value(&VectorSource {
+                r#type: "vector".into(),
+                url: url.into(),
+            })?,
+        );
+
+        Ok(())
+    }
+
+    pub fn add_geojson_source(&self, id: impl Into<String>, data: geojson::GeoJson) -> Result<()> {
         let ser = serde_wasm_bindgen::Serializer::new().serialize_maps_as_objects(true);
         let data = source::GeoJsonSourceSpec::new(data)
             .serialize(&ser)
-            .map_err(|_| anyhow::anyhow!("Failed to convert GeoJson"))?;
+            .map_err(|e| Error::BadGeoJson(e.to_string()))?;
 
         self.inner.addSource(id.into(), data);
 

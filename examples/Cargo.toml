@@ -13,3 +13,5 @@ members = [
   "change-map-style",
   "get-features-under-the-mouse-pointer",
 ]
+
+resolver = "2"

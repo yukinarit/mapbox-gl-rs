@@ -1,4 +1,4 @@
-use anyhow::anyhow;
+use crate::{Error, Result};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
@@ -20,13 +20,13 @@ pub struct MapBaseEvent {
 }
 
 impl TryFrom<JsValue> for MapBaseEvent {
-    type Error = anyhow::Error;
+    type Error = Error;
 
-    fn try_from(value: JsValue) -> Result<Self, Self::Error> {
-        let r#type = js_sys::Reflect::get(&value, &JsValue::from("type"))
-            .unwrap()
+    fn try_from(value: JsValue) -> Result<Self> {
+        let r#type = get_property(&value, "MapBaseEvent", "type")?
             .as_string()
             .unwrap();
+
         Ok(MapBaseEvent { r#type })
     }
 }
@@ -38,19 +38,17 @@ pub struct MapEvent {
 }
 
 impl TryFrom<JsValue> for MapEvent {
-    type Error = anyhow::Error;
+    type Error = Error;
 
-    fn try_from(value: JsValue) -> Result<Self, Self::Error> {
-        let r#type = js_sys::Reflect::get(&value, &JsValue::from("type"))
-            .unwrap()
+    fn try_from(value: JsValue) -> Result<Self> {
+        let r#type = get_property(&value, "MapEvent", "type")?
             .as_string()
             .unwrap();
-        let original_event = js_sys::Reflect::get(&value, &JsValue::from("originalEvent"))
-            .ok()
-            .and_then(|event| web_sys::MouseEvent::try_from(event).ok());
+        let event = get_property(&value, "MapEvent", "originalEvent")?;
+
         Ok(MapEvent {
             r#type,
-            original_event,
+            original_event: web_sys::MouseEvent::try_from(event).ok(),
         })
     }
 }
@@ -68,11 +66,10 @@ pub struct MapDataEvent {
 }
 
 impl TryFrom<JsValue> for MapDataEvent {
-    type Error = anyhow::Error;
+    type Error = Error;
 
-    fn try_from(value: JsValue) -> Result<Self, Self::Error> {
-        serde_wasm_bindgen::from_value(value)
-            .map_err(|e| anyhow!("Failed to deserialize into \"MapDataEvent\": {}", e))
+    fn try_from(value: JsValue) -> Result<Self> {
+        Ok(serde_wasm_bindgen::from_value(value)?)
     }
 }
 
@@ -83,20 +80,17 @@ pub struct MapBoxZoomEvent {
 }
 
 impl TryFrom<JsValue> for MapBoxZoomEvent {
-    type Error = anyhow::Error;
+    type Error = Error;
 
-    fn try_from(value: JsValue) -> Result<Self, Self::Error> {
-        let r#type = js_sys::Reflect::get(&value, &JsValue::from("type"))
-            .map_err(|_| anyhow!("\"type\" property not found"))?
+    fn try_from(value: JsValue) -> Result<Self> {
+        let r#type = get_property(&value, "MapBoxZoomEvent", "type")?
             .as_string()
-            .ok_or_else(|| anyhow!("Failed to cast \"type\" property as string"))?;
-
-        let event = js_sys::Reflect::get(&value, &JsValue::from("originalEvent"))
-            .map_err(|_| anyhow!("\"originalEvent\" property not found"))?;
+            .unwrap();
+        let event = get_property(&value, "MapBoxZoomEvent", "originalEvent")?;
 
         Ok(MapBoxZoomEvent {
             r#type,
-            original_event: web_sys::MouseEvent::try_from(event)?,
+            original_event: web_sys::MouseEvent::try_from(event).unwrap(),
         })
     }
 }
@@ -111,32 +105,23 @@ pub struct MapMouseEvent {
 }
 
 impl TryFrom<JsValue> for MapMouseEvent {
-    type Error = anyhow::Error;
+    type Error = Error;
 
-    fn try_from(value: JsValue) -> Result<Self, Self::Error> {
-        let r#type = js_sys::Reflect::get(&value, &JsValue::from("type"))
-            .map_err(|_| anyhow!("\"type\" property not found"))?
+    fn try_from(value: JsValue) -> Result<Self> {
+        let r#type = get_property(&value, "MapMouseEvent", "type")?
             .as_string()
-            .ok_or_else(|| anyhow!("Failed to cast \"type\" property as string"))?;
-
-        let event = js_sys::Reflect::get(&value, &JsValue::from("originalEvent"))
-            .map_err(|_| anyhow!("\"originalEvent\" property not found"))?;
-
-        let point = js_sys::Reflect::get(&value, &JsValue::from("point"))
-            .map_err(|_| anyhow!("\"point\" property not found"))?;
-
-        let lng_lat = js_sys::Reflect::get(&value, &JsValue::from("lngLat"))
-            .map_err(|_| anyhow!("\"lngLat\" property not found"))?;
-
-        let features = js_sys::Reflect::get(&value, &JsValue::from("features"))
-            .map_err(|_| anyhow!("\"features\" property not found"))?;
+            .unwrap();
+        let event = get_property(&value, "MapMouseEvent", "originalEvent")?;
+        let point = get_property(&value, "MapMouseEvent", "point")?;
+        let lng_lat = get_property(&value, "MapMouseEvent", "lngLat")?;
+        let features = get_property(&value, "MapMouseEvent", "features")?;
 
         Ok(MapMouseEvent {
             r#type,
-            original_event: web_sys::MouseEvent::try_from(event)?,
-            point: serde_wasm_bindgen::from_value(point).unwrap(),
-            lng_lat: serde_wasm_bindgen::from_value(lng_lat).unwrap(),
-            features: serde_wasm_bindgen::from_value(features).unwrap_or_default(),
+            original_event: web_sys::MouseEvent::try_from(event).unwrap(),
+            point: serde_wasm_bindgen::from_value(point)?,
+            lng_lat: serde_wasm_bindgen::from_value(lng_lat)?,
+            features: serde_wasm_bindgen::from_value(features)?,
         })
     }
 }
@@ -153,40 +138,27 @@ pub struct MapTouchEvent {
 }
 
 impl TryFrom<JsValue> for MapTouchEvent {
-    type Error = anyhow::Error;
+    type Error = Error;
 
-    fn try_from(value: JsValue) -> Result<Self, Self::Error> {
-        let r#type = js_sys::Reflect::get(&value, &JsValue::from("type"))
-            .map_err(|_| anyhow!("\"type\" property not found"))?
+    fn try_from(value: JsValue) -> Result<Self> {
+        let r#type = get_property(&value, "MapTouchEvent", "type")?
             .as_string()
-            .ok_or_else(|| anyhow!("Failed to cast \"type\" property as string"))?;
-
-        let event = js_sys::Reflect::get(&value, &JsValue::from("originalEvent"))
-            .map_err(|_| anyhow!("\"originalEvent\" property not found"))?;
-
-        let point = js_sys::Reflect::get(&value, &JsValue::from("point"))
-            .map_err(|_| anyhow!("\"point\" property not found"))?;
-
-        let points = js_sys::Reflect::get(&value, &JsValue::from("points"))
-            .map_err(|_| anyhow!("\"points\" property not found"))?;
-
-        let lng_lat = js_sys::Reflect::get(&value, &JsValue::from("lngLat"))
-            .map_err(|_| anyhow!("\"lngLat\" property not found"))?;
-
-        let lng_lats = js_sys::Reflect::get(&value, &JsValue::from("lngLats"))
-            .map_err(|_| anyhow!("\"lngLats\" property not found"))?;
-
-        let features = js_sys::Reflect::get(&value, &JsValue::from("features"))
-            .map_err(|_| anyhow!("\"features\" property not found"))?;
+            .unwrap();
+        let event = get_property(&value, "MapTouchEvent", "originalEvent")?;
+        let point = get_property(&value, "MapTouchEvent", "point")?;
+        let points = get_property(&value, "MapTouchEvent", "points")?;
+        let lng_lat = get_property(&value, "MapTouchEvent", "lngLat")?;
+        let lng_lats = get_property(&value, "MapTouchEvent", "lngLats")?;
+        let features = get_property(&value, "MapTouchEvent", "features")?;
 
         Ok(MapTouchEvent {
             r#type,
-            original_event: web_sys::TouchEvent::try_from(event)?,
-            point: serde_wasm_bindgen::from_value(point).unwrap(),
-            points: serde_wasm_bindgen::from_value(points).unwrap(),
-            lng_lat: serde_wasm_bindgen::from_value(lng_lat).unwrap(),
-            lng_lats: serde_wasm_bindgen::from_value(lng_lats).unwrap(),
-            features: serde_wasm_bindgen::from_value(features).unwrap_or_default(),
+            original_event: web_sys::TouchEvent::try_from(event).unwrap(),
+            point: serde_wasm_bindgen::from_value(point)?,
+            points: serde_wasm_bindgen::from_value(points)?,
+            lng_lat: serde_wasm_bindgen::from_value(lng_lat)?,
+            lng_lats: serde_wasm_bindgen::from_value(lng_lats)?,
+            features: serde_wasm_bindgen::from_value(features)?,
         })
     }
 }
@@ -198,20 +170,17 @@ pub struct MapWheelEvent {
 }
 
 impl TryFrom<JsValue> for MapWheelEvent {
-    type Error = anyhow::Error;
+    type Error = Error;
 
-    fn try_from(value: JsValue) -> Result<Self, Self::Error> {
-        let r#type = js_sys::Reflect::get(&value, &JsValue::from("type"))
-            .map_err(|_| anyhow!("\"type\" property not found"))?
+    fn try_from(value: JsValue) -> Result<Self> {
+        let r#type = get_property(&value, "MapWheelEvent", "type")?
             .as_string()
-            .ok_or_else(|| anyhow!("Failed to cast \"type\" property as string"))?;
-
-        let event = js_sys::Reflect::get(&value, &JsValue::from("originalEvent"))
-            .map_err(|_| anyhow!("\"originalEvent\" property not found"))?;
+            .unwrap();
+        let event = get_property(&value, "MapWheelEvent", "originalEvent")?;
 
         Ok(MapWheelEvent {
             r#type,
-            original_event: web_sys::WheelEvent::try_from(event)?,
+            original_event: web_sys::WheelEvent::try_from(event).unwrap(),
         })
     }
 }
@@ -222,14 +191,26 @@ pub struct DragEvent {
 }
 
 impl TryFrom<JsValue> for DragEvent {
-    type Error = anyhow::Error;
+    type Error = Error;
 
-    fn try_from(value: JsValue) -> Result<Self, Self::Error> {
-        let event = js_sys::Reflect::get(&value, &JsValue::from("originalEvent"))
-            .map_err(|_| anyhow!("\"originalEvent\" property not found"))?;
+    fn try_from(value: JsValue) -> Result<Self> {
+        let event = get_property(&value, "DragEvent", "originalEvent")?;
 
         Ok(DragEvent {
-            original_event: web_sys::DragEvent::try_from(event)?,
+            original_event: web_sys::DragEvent::try_from(event).unwrap(),
         })
     }
+}
+
+fn get_property(
+    value: &JsValue,
+    event_name: &'static str,
+    property_name: &'static str,
+) -> Result<JsValue> {
+    js_sys::Reflect::get(value, &JsValue::from(property_name)).map_err(|_| {
+        Error::BadEventFormat(
+            event_name,
+            format!("property \"{property_name}\" is missing"),
+        )
+    })
 }
