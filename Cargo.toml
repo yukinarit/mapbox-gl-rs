@@ -30,19 +30,3 @@ uuid = { version = "1", features = ["v4", "js"] }
 
 [dev-dependencies]
 anyhow = "1"
-
-[workspace]
-members = [
-  "examples/geojson-source",
-  "examples/on-load",
-  "examples/popup",
-  "examples/set-data",
-  "examples/simple",
-  "examples/sycamore-simple",
-  "examples/add-image",
-  "examples/leptos-simple",
-  "examples/custom-icons-with-markers",
-  "examples/draggable-marker",
-  "examples/change-map-style",
-  "examples/get-features-under-the-mouse-pointer",
-]
