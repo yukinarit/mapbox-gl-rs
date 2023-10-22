@@ -9,26 +9,32 @@ on:
 env:
   MAPBOX_TOKEN: token
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     name: Run build and tests
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Build
-      uses: actions-rs/cargo@v1
-      with:
-        command: build
-        args: --workspace --all-targets --all-features
+    - uses: actions/checkout@v4
+    - name: Set up Rust toolchain
+      run: |
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- \
+          --default-toolchain stable \
+          --profile minimal \
+          --component rustfmt clippy \
+          -y
+    - name: Build crate and examples
+      run: |
+        cargo build --workspace --all-targets --all-features
+        pushd examples; cargo build --workspace --all-targets --all-features; popd
     - name: Clippy
-      uses: actions-rs/cargo@v1
-      with:
-        command: clippy
-        args: --workspace --all-targets --all-features -- --deny clippy::all
+      run: |
+        cargo clippy --workspace --all-targets --all-features -- --deny clippy::all
+        pushd examples; cargo clippy --workspace --all-targets --all-features -- --deny clippy::all; popd
     - name: Install nextest
       uses: taiki-e/install-action@nextest
-    - name: Tests
-      uses: actions-rs/cargo@v1
-      with:
-        command: nextest
-        args: run --all
+    - name: Unit tests
+      run: cargo nextest run --retries 3
