@@ -12,6 +12,7 @@ members = [
   "draggable-marker",
   "change-map-style",
   "get-features-under-the-mouse-pointer",
+  "fly-to-location",
 ]
 
 resolver = "2"

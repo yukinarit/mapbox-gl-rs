@@ -97,6 +97,15 @@ extern "C" {
     pub fn getZoom(this: &Map) -> f64;
 
     #[wasm_bindgen(method)]
+    pub fn jumpTo(this: &Map, options: JsValue);
+
+    #[wasm_bindgen(method)]
+    pub fn easeTo(this: &Map, options: JsValue);
+
+    #[wasm_bindgen(method)]
+    pub fn flyTo(this: &Map, options: JsValue, eventData: JsValue);
+
+    #[wasm_bindgen(method)]
     pub fn on(this: &Map, r#type: String, callback: &Closure<dyn Fn(JsValue)>);
 
     #[wasm_bindgen(method, js_name=on)]
