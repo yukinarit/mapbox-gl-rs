@@ -1,4 +1,5 @@
 use crate::{Error, Result};
+use log::*;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
@@ -121,7 +122,7 @@ impl TryFrom<JsValue> for MapMouseEvent {
             original_event: web_sys::MouseEvent::try_from(event).unwrap(),
             point: serde_wasm_bindgen::from_value(point)?,
             lng_lat: serde_wasm_bindgen::from_value(lng_lat)?,
-            features: serde_wasm_bindgen::from_value(features)?,
+            features: serde_wasm_bindgen::from_value(features).unwrap_or_default(),
         })
     }
 }
@@ -158,7 +159,7 @@ impl TryFrom<JsValue> for MapTouchEvent {
             points: serde_wasm_bindgen::from_value(points)?,
             lng_lat: serde_wasm_bindgen::from_value(lng_lat)?,
             lng_lats: serde_wasm_bindgen::from_value(lng_lats)?,
-            features: serde_wasm_bindgen::from_value(features)?,
+            features: serde_wasm_bindgen::from_value(features).unwrap_or_default(),
         })
     }
 }
@@ -207,6 +208,7 @@ fn get_property(
     event_name: &'static str,
     property_name: &'static str,
 ) -> Result<JsValue> {
+    trace!("Getting {property_name} on {value:?}");
     js_sys::Reflect::get(value, &JsValue::from(property_name)).map_err(|_| {
         Error::BadEventFormat(
             event_name,

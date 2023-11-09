@@ -76,6 +76,22 @@ impl std::fmt::Debug for LngLat {
     }
 }
 
+impl std::default::Default for LngLat {
+    fn default() -> Self {
+        LngLat {
+            inner: js::LngLat::new(0.0, 0.0),
+        }
+    }
+}
+
+impl std::clone::Clone for LngLat {
+    fn clone(&self) -> Self {
+        LngLat {
+            inner: js::LngLat::new(self.lng(), self.lat()),
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 struct LngLatValue {
     lng: f64,
@@ -100,6 +116,13 @@ where
 {
     let value = LngLatValue::deserialize(de)?;
     Ok(js::LngLat::new(value.lng, value.lat))
+}
+
+fn serialize_lnglat_as_vec<S>(lnglat: &LngLat, ser: S) -> std::result::Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    vec![lnglat.lng(), lnglat.lat()].serialize(ser)
 }
 
 impl LngLat {
@@ -815,6 +838,65 @@ pub struct QueryFeatureOptions {
     pub validate: Option<bool>,
 }
 
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct CameraOptions {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub around: Option<LngLat>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bearing: Option<f64>,
+    #[serde(serialize_with = "serialize_lnglat_as_vec")]
+    pub center: LngLat,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub padding: Option<PaddingOptions>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pitch: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub zoom: Option<f64>,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct PaddingOptions {
+    pub bottom: Option<LngLat>,
+    pub left: Option<LngLat>,
+    pub right: Option<LngLat>,
+    pub top: Option<LngLat>,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AnimationOptions {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub animate: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub curve: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub duration: Option<f64>,
+    // TODO
+    //#[serde(skip_serializing_if = "Option::is_none")]
+    //pub easing: Option<xxx>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub essential: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_duration: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub min_zoom: Option<f64>,
+    // TODO
+    //#[serde(skip_serializing_if = "Option::is_none")]
+    //pub offset: Option<xxx>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub preloading_only: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub screen_speed: Option<f64>,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct CameraAnimationOptions {
+    #[serde(flatten)]
+    camera_options: CameraOptions,
+    #[serde(flatten)]
+    animation_options: AnimationOptions,
+}
+
 impl Map {
     pub fn get_container(&self) -> web_sys::HtmlElement {
         self.inner.getContainer()
@@ -1070,5 +1152,37 @@ impl Map {
 
     pub fn get_zoom(&self) -> f64 {
         self.inner.getZoom()
+    }
+
+    pub fn jump_to(&self, options: CameraOptions) {
+        self.inner
+            .jumpTo(serde_wasm_bindgen::to_value(&options).unwrap());
+    }
+
+    pub fn ease_to(&self, camera_options: CameraOptions, animation_options: AnimationOptions) {
+        self.inner.easeTo(
+            serde_wasm_bindgen::to_value(&CameraAnimationOptions {
+                camera_options,
+                animation_options,
+            })
+            .unwrap(),
+        );
+    }
+
+    pub fn fly_to(&self, camera_options: CameraOptions, animation_options: AnimationOptions) {
+        let options = CameraAnimationOptions {
+            camera_options,
+            animation_options,
+        };
+
+        debug!(
+            "Map#fly_to {}",
+            serde_json::to_string_pretty(&options).unwrap()
+        );
+
+        self.inner.flyTo(
+            serde_wasm_bindgen::to_value(&options).unwrap(),
+            JsValue::null(),
+        );
     }
 }
