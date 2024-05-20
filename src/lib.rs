@@ -312,242 +312,216 @@ impl MapOptions {
         serde_wasm_bindgen::to_value(&self).unwrap()
     }
 }
+macro_rules! run_macro_with_events {
+    ($macro:ident) => {
+        $macro! {
+            (on_resize, MapBaseEvent);
+            (on_remove, MapBaseEvent);
+
+            // Interaction
+            (on_mousedown, MapMouseEvent);
+            (on_mouseup, MapMouseEvent);
+            (on_preclick, MapMouseEvent);
+            (on_click, MapMouseEvent);
+            (on_dblclick, MapMouseEvent);
+            (on_mousemove, MapMouseEvent);
+            (on_mouseover, MapMouseEvent);
+            (on_mouseenter, MapMouseEvent);
+            (on_mouseleave, MapMouseEvent);
+            (on_mouseout, MapMouseEvent);
+            (on_contextmenu, MapMouseEvent);
+            (on_touchstart, MapTouchEvent);
+            (on_touchend, MapTouchEvent);
+            (on_touchcancel, MapTouchEvent);
+            (on_wheel, MapWheelEvent);
+
+            // Movement
+            (on_movestart, DragEvent);
+            (on_move, MapEvent);
+            (on_moveend, DragEvent);
+            (on_dragstart, MapBaseEvent);
+            (on_drag, DragEvent);
+            (on_dragend, DragEvent);
+            (on_zoomstart, MapBaseEvent);
+            (on_zoom, MapBaseEvent);
+            (on_zoomend, MapBaseEvent);
+            (on_rotatestart, MapBaseEvent);
+            (on_rotate, MapBaseEvent);
+            (on_rotateend, MapBaseEvent);
+            (on_pitchstart, MapBaseEvent);
+            (on_pitch, MapBaseEvent);
+            (on_pitchend, MapBaseEvent);
+            (on_boxzoomstart, MapBoxZoomEvent);
+            (on_boxzoomend, MapBoxZoomEvent);
+            (on_boxzoomcancel, MapBoxZoomEvent);
+
+            // Lifecycle
+            (on_load, MapBaseEvent);
+            (on_render, MapBaseEvent);
+            (on_idle, MapBaseEvent);
+            (on_webglcontextlost, MapBaseEvent);
+            (on_webglcontextrestored, MapBaseEvent);
+
+            // Data loading
+            (on_data, MapDataEvent);
+            (on_styledata, MapDataEvent);
+            (on_sourcedata, MapDataEvent);
+            (on_dataloading, MapDataEvent);
+            (on_styledataloading, MapDataEvent);
+            (on_sourcedataloading, MapBaseEvent);
+            (on_styleimagemissing, MapBaseEvent);
+        }
+    };
+}
+
+macro_rules! impl_trait {
+    ($(($event:ident, $type:ident);)*) => {
 
 #[allow(unused_variables)]
 pub trait MapEventListener {
-    fn on_resize(&mut self, map: Rc<Map>, e: event::MapBaseEvent) {}
-    fn on_remove(&mut self, map: Rc<Map>, e: event::MapBaseEvent) {}
-
-    // Interaction
-    fn on_mousedown(&mut self, map: Rc<Map>, e: event::MapMouseEvent) {}
-    fn on_mouseup(&mut self, map: Rc<Map>, e: event::MapMouseEvent) {}
-    fn on_preclick(&mut self, map: Rc<Map>, e: event::MapMouseEvent) {}
-    fn on_click(&mut self, map: Rc<Map>, e: event::MapMouseEvent) {}
-    fn on_dblclick(&mut self, map: Rc<Map>, e: event::MapMouseEvent) {}
-    fn on_mousemove(&mut self, map: Rc<Map>, e: event::MapMouseEvent) {}
-    fn on_mouseover(&mut self, map: Rc<Map>, e: event::MapMouseEvent) {}
-    fn on_mouseenter(&mut self, map: Rc<Map>, e: event::MapMouseEvent) {}
-    fn on_mouseleave(&mut self, map: Rc<Map>, e: event::MapMouseEvent) {}
-    fn on_mouseout(&mut self, map: Rc<Map>, e: event::MapMouseEvent) {}
-    fn on_contextmenu(&mut self, map: Rc<Map>, e: event::MapMouseEvent) {}
-    fn on_touchstart(&mut self, map: Rc<Map>, e: event::MapTouchEvent) {}
-    fn on_touchend(&mut self, map: Rc<Map>, e: event::MapTouchEvent) {}
-    fn on_touchcancel(&mut self, map: Rc<Map>, e: event::MapTouchEvent) {}
-    fn on_wheel(&mut self, map: Rc<Map>, e: event::MapWheelEvent) {}
-
-    // Movement
-    fn on_movestart(&mut self, map: Rc<Map>, e: event::DragEvent) {}
-    fn on_move(&mut self, map: Rc<Map>, e: event::MapEvent) {}
-    fn on_moveend(&mut self, map: Rc<Map>, e: event::DragEvent) {}
-    fn on_dragstart(&mut self, map: Rc<Map>, e: event::MapBaseEvent) {}
-    fn on_drag(&mut self, map: Rc<Map>, e: event::DragEvent) {}
-    fn on_dragend(&mut self, map: Rc<Map>, e: event::DragEvent) {}
-    fn on_zoomstart(&mut self, map: Rc<Map>, e: event::MapBaseEvent) {}
-    fn on_zoom(&mut self, map: Rc<Map>, e: event::MapBaseEvent) {}
-    fn on_zoomend(&mut self, map: Rc<Map>, e: event::MapBaseEvent) {}
-    fn on_rotatestart(&mut self, map: Rc<Map>, e: event::MapBaseEvent) {}
-    fn on_rotate(&mut self, map: Rc<Map>, e: event::MapBaseEvent) {}
-    fn on_rotateend(&mut self, map: Rc<Map>, e: event::MapBaseEvent) {}
-    fn on_pitchstart(&mut self, map: Rc<Map>, e: event::MapBaseEvent) {}
-    fn on_pitch(&mut self, map: Rc<Map>, e: event::MapBaseEvent) {}
-    fn on_pitchend(&mut self, map: Rc<Map>, e: event::MapBaseEvent) {}
-    fn on_boxzoomstart(&mut self, map: Rc<Map>, e: event::MapBoxZoomEvent) {}
-    fn on_boxzoomend(&mut self, map: Rc<Map>, e: event::MapBoxZoomEvent) {}
-    fn on_boxzoomcancel(&mut self, map: Rc<Map>, e: event::MapBoxZoomEvent) {}
-
-    // Lifecycle
-    fn on_load(&mut self, map: Rc<Map>, e: event::MapBaseEvent) {}
-    fn on_render(&mut self, map: Rc<Map>, e: event::MapBaseEvent) {}
-    fn on_idle(&mut self, map: Rc<Map>, e: event::MapBaseEvent) {}
+    $(
+        fn $event(&mut self, map: Rc<Map>, e: event::$type) {}
+    )*
     fn on_error(&mut self, map: Rc<Map>, _message: String) {}
-    fn on_webglcontextlost(&mut self, map: Rc<Map>, e: event::MapBaseEvent) {}
-    fn on_webglcontextrestored(&mut self, map: Rc<Map>, e: event::MapBaseEvent) {}
-
-    // Data loading
-    fn on_data(&mut self, map: Rc<Map>, e: event::MapDataEvent) {}
-    fn on_styledata(&mut self, map: Rc<Map>, e: event::MapDataEvent) {}
-    fn on_sourcedata(&mut self, map: Rc<Map>, e: event::MapDataEvent) {}
-    fn on_dataloading(&mut self, map: Rc<Map>, e: event::MapDataEvent) {}
-    fn on_styledataloading(&mut self, map: Rc<Map>, e: event::MapDataEvent) {}
-    fn on_sourcedataloading(&mut self, map: Rc<Map>, e: event::MapBaseEvent) {}
-    fn on_styleimagemissing(&mut self, map: Rc<Map>, e: event::MapBaseEvent) {}
 }
+
+    };
+}
+
+macro_rules! define_handle {
+    ($(($event:ident, $type:ident);)*) => {
 
 pub struct Handle {
-    on_resize: Closure<dyn Fn(JsValue)>,
-    on_remove: Closure<dyn Fn(JsValue)>,
-
-    // Interaction
-    on_mousedown: Closure<dyn Fn(JsValue)>,
-    on_mouseup: Closure<dyn Fn(JsValue)>,
-    on_preclick: Closure<dyn Fn(JsValue)>,
-    on_click: Closure<dyn Fn(JsValue)>,
-    on_dblclick: Closure<dyn Fn(JsValue)>,
-    on_mousemove: Closure<dyn Fn(JsValue)>,
-    on_mouseover: Closure<dyn Fn(JsValue)>,
-    on_mouseenter: Closure<dyn Fn(JsValue)>,
-    on_mouseleave: Closure<dyn Fn(JsValue)>,
-    on_mouseout: Closure<dyn Fn(JsValue)>,
-    on_contextmenu: Closure<dyn Fn(JsValue)>,
-    on_touchstart: Closure<dyn Fn(JsValue)>,
-    on_touchend: Closure<dyn Fn(JsValue)>,
-    on_touchcancel: Closure<dyn Fn(JsValue)>,
-    on_wheel: Closure<dyn Fn(JsValue)>,
-
-    // Movement
-    on_movestart: Closure<dyn Fn(JsValue)>,
-    on_move: Closure<dyn Fn(JsValue)>,
-    on_moveend: Closure<dyn Fn(JsValue)>,
-    on_dragstart: Closure<dyn Fn(JsValue)>,
-    on_drag: Closure<dyn Fn(JsValue)>,
-    on_dragend: Closure<dyn Fn(JsValue)>,
-    on_zoomstart: Closure<dyn Fn(JsValue)>,
-    on_zoom: Closure<dyn Fn(JsValue)>,
-    on_zoomend: Closure<dyn Fn(JsValue)>,
-    on_rotatestart: Closure<dyn Fn(JsValue)>,
-    on_rotate: Closure<dyn Fn(JsValue)>,
-    on_rotateend: Closure<dyn Fn(JsValue)>,
-    on_pitchstart: Closure<dyn Fn(JsValue)>,
-    on_pitch: Closure<dyn Fn(JsValue)>,
-    on_pitchend: Closure<dyn Fn(JsValue)>,
-    on_boxzoomstart: Closure<dyn Fn(JsValue)>,
-    on_boxzoomend: Closure<dyn Fn(JsValue)>,
-    on_boxzoomcancel: Closure<dyn Fn(JsValue)>,
-
-    // Lifecycle
-    on_load: Closure<dyn Fn(JsValue)>,
-    on_render: Closure<dyn Fn(JsValue)>,
-    on_idle: Closure<dyn Fn(JsValue)>,
+    $(
+        $event: Closure<dyn Fn(JsValue)>,
+    )*
     on_error: Closure<dyn Fn(JsValue)>,
-    on_webglcontextlost: Closure<dyn Fn(JsValue)>,
-    on_webglcontextrestored: Closure<dyn Fn(JsValue)>,
-
-    // Data loading
-    on_data: Closure<dyn Fn(JsValue)>,
-    on_styledata: Closure<dyn Fn(JsValue)>,
-    on_sourcedata: Closure<dyn Fn(JsValue)>,
-    on_dataloading: Closure<dyn Fn(JsValue)>,
-    on_styledataloading: Closure<dyn Fn(JsValue)>,
-    on_sourcedataloading: Closure<dyn Fn(JsValue)>,
-    on_styleimagemissing: Closure<dyn Fn(JsValue)>,
 }
 
-macro_rules! impl_handler{
-    ($(($event:ident, $type:ident),)*) => {
+    };
+}
+
+macro_rules! impl_handle {
+    ($(($event:ident, $type:ident);)*) => {
+
 impl Handle {
     pub fn new<F: MapEventListener + 'static>(map: Weak<Map>, f: F) -> Handle {
         let f = Rc::new(RefCell::new(f));
         Handle {
-            $($event: impl_event!(map, f, $event, $type),)*
+            $(
+                $event: Closure::new(enclose!(
+                    (map, f) move |value: JsValue| {
+                        let Some(map) = map.upgrade() else {
+                            warn!("Failed to get Map handle");
+                            return;
+                        };
+
+                        match  value.try_into() {
+                            Ok(e) => {
+                                if let Ok(mut f) = f.try_borrow_mut() {
+                                    f.deref_mut().$event(map, e);
+                                } else {
+                                    error!("Could not borrow {} handler. Handler is being called somewhere?", stringify!($event));
+                                }
+                            },
+                            Err(e) => {
+                                error!("Failed to deserialize Event: {e}");
+                            }
+                        }
+                    }
+                )),
+            )*
+            on_error: Closure::new(enclose!(
+                (map, f) move |value: JsValue| {
+                    web_sys::console::warn_2(&JsValue::from("on_error"), &value);
+
+                    let Some(map) = map.upgrade() else {
+                        warn!("Failed to get Map handle");
+                        return;
+                    };
+
+                    if let Ok(mut f) = f.try_borrow_mut() {
+                        f.deref_mut().on_error(map, value.as_string().unwrap());
+                    } else {
+                        error!("Could not borrow on_error handler. Handler is being called somewhere?");
+                    }
+                }
+            )),
         }
     }
 }
-    }
-}
 
-macro_rules! impl_event {
-    ($m: ident, $f:ident, $event:ident, JsValue) => {
-            Closure::new(enclose!(
-                ($m, $f) move |value: JsValue| {
-                    web_sys::console::debug_2(&JsValue::from(stringify!($event)), &value);
-
-                    let Some(map) = $m.upgrade() else {
-                        warn!("Failed to get Map handle");
-                        return;
-                    };
-
-                    match  value.try_into() {
-                        Ok(e) => {
-                            if let Ok(mut f) = $f.try_borrow_mut() {
-                                f.deref_mut().$event(map, e);
-                            } else {
-                                error!("Could not borrow {} handler. Handler is being called somewhere?", stringify!($event));
-                            }
-                        },
-                        Err(e) => {
-                            error!("Failed to deserialize Event: {e}");
-                        }
-                    }
-                }
-            ))
-    };
-    ($m:ident, $f:ident, $event:ident, String) => {
-            Closure::new(enclose!(
-                ($m, $f) move |value: JsValue| {
-                    web_sys::console::warn_2(&JsValue::from(stringify!($event)), &value);
-
-                    let Some(map) = $m.upgrade() else {
-                        warn!("Failed to get Map handle");
-                        return;
-                    };
-
-                    if let Ok(mut f) = $f.try_borrow_mut() {
-                        f.deref_mut().$event(map, value.as_string().unwrap());
-                    } else {
-                        error!("Could not borrow {} handler. Handler is being called somewhere?", stringify!($event));
-                    }
-                }
-            ))
     };
 }
 
-impl_handler! {
-    (on_resize, JsValue),
-    (on_remove, JsValue),
+run_macro_with_events!(impl_trait);
+run_macro_with_events!(define_handle);
+run_macro_with_events!(impl_handle);
 
-    // Interaction
-    (on_mousedown,  JsValue),
-    (on_mouseup,    JsValue),
-    (on_preclick,   JsValue),
-    (on_click,      JsValue),
-    (on_dblclick,   JsValue),
-    (on_mousemove,  JsValue),
-    (on_mouseover,  JsValue),
-    (on_mouseenter, JsValue),
-    (on_mouseleave, JsValue),
-    (on_mouseout,   JsValue),
-    (on_contextmenu,JsValue),
-    (on_touchstart, JsValue),
-    (on_touchend,   JsValue),
-    (on_touchcancel,JsValue),
-    (on_wheel,   JsValue),
+macro_rules! impl_on_method {
+    ($(($event:ident, $type:ident);)*) => {
 
-    // Movement
-    (on_movestart, JsValue),
-    (on_move, JsValue),
-    (on_moveend, JsValue),
-    (on_dragstart, JsValue),
-    (on_drag, JsValue),
-    (on_dragend, JsValue),
-    (on_zoomstart,JsValue),
-    (on_zoom,JsValue),
-    (on_zoomend, JsValue),
-    (on_rotatestart, JsValue),
-    (on_rotate, JsValue),
-    (on_rotateend, JsValue),
-    (on_pitchstart, JsValue),
-    (on_pitch, JsValue),
-    (on_pitchend, JsValue),
-    (on_boxzoomstart, JsValue),
-    (on_boxzoomend, JsValue),
-    (on_boxzoomcancel,JsValue),
+/// Add a listener to a specified event type.
+pub fn on<F: MapEventListener + 'static>(&self, f: F) -> Result<MapListenerId> {
+    let handle = Handle::new(
+        self.weak_self
+            .try_borrow()
+            .map_err(|e| Error::Unexpected(format!("Could not borrow weak_self: {e}")))?
+            .clone()
+            .ok_or_else(|| Error::Unexpected("Weak reference is missing".to_string()))?,
+        f,
+    );
+    let inner = &self.inner;
 
-    // Lifecycle
-    (on_load, JsValue),
-    (on_render, JsValue),
-    (on_idle, JsValue),
-    (on_error, String),
-    (on_webglcontextlost, JsValue),
-    (on_webglcontextrestored, JsValue),
+    $(
+        inner.on(stringify!($event).trim_start_matches("on_").into(), &handle.$event);
+    )*
 
-    // Data loading
-    (on_data, JsValue),
-    (on_styledata, JsValue),
-    (on_sourcedata, JsValue),
-    (on_dataloading, JsValue),
-    (on_styledataloading, JsValue),
-    (on_sourcedataloading, JsValue),
-    (on_styleimagemissing, JsValue),
+    inner.on("error".into(), &handle.on_error);
+
+    let id = MapListenerId(uuid::Uuid::new_v4());
+    self.handles
+        .try_borrow_mut()
+        .map_err(|e| Error::Unexpected(format!("Could not get lock for handles: {e}")))?
+        .insert(id, handle);
+
+    Ok(id)
+}
+
+    };
+}
+
+macro_rules! impl_on_layer_method {
+    ($(($event:ident, $type:ident);)*) => {
+
+/// Add a listener to a specified event type and layer.
+pub fn on_layer<F: MapEventListener + 'static>(&self, layer_id: &str, f: F) -> Result<MapListenerId> {
+    let handle = Handle::new(
+        self.weak_self
+            .try_borrow()
+            .map_err(|e| Error::Unexpected(format!("Could not borrow weak_self: {e}")))?
+            .clone()
+            .ok_or_else(|| Error::Unexpected("Weak reference is missing".to_string()))?,
+        f,
+    );
+    let inner = &self.inner;
+
+    $(
+        inner.on_layer(stringify!($event).trim_start_matches("on_").into(), layer_id.into(), &handle.$event);
+    )*
+
+    inner.on_layer("error".into(), layer_id.into(), &handle.on_error);
+
+    let id = MapListenerId(uuid::Uuid::new_v4());
+    self.handles
+        .try_borrow_mut()
+        .map_err(|e| Error::Unexpected(format!("Could not get lock for handles: {e}")))?
+        .insert(id, handle);
+
+    Ok(id)
+}
+
+    };
 }
 
 pub struct Map {
@@ -581,212 +555,8 @@ impl Map {
         Ok(map)
     }
 
-    /// Add a listener to a specified event type.
-    pub fn on<F: MapEventListener + 'static>(&self, f: F) -> Result<MapListenerId> {
-        let handle = Handle::new(
-            self.weak_self
-                .try_borrow()
-                .map_err(|e| Error::Unexpected(format!("Could not borrow weak_self: {e}")))?
-                .clone()
-                .ok_or_else(|| Error::Unexpected("Weak reference is missing".to_string()))?,
-            f,
-        );
-        let inner = &self.inner;
-
-        inner.on("resize".into(), &handle.on_resize);
-        inner.on("remove".into(), &handle.on_remove);
-
-        // Interaction
-        inner.on("mousedown".into(), &handle.on_mousedown);
-        inner.on("mouseup".into(), &handle.on_mouseup);
-        inner.on("preclick".into(), &handle.on_preclick);
-        inner.on("click".into(), &handle.on_click);
-        inner.on("dblclick".into(), &handle.on_dblclick);
-        inner.on("mousemove".into(), &handle.on_mousemove);
-        inner.on("mouseover".into(), &handle.on_mouseover);
-        inner.on("mouseenter".into(), &handle.on_mouseenter);
-        inner.on("mouseleave".into(), &handle.on_mouseleave);
-        inner.on("mouseout".into(), &handle.on_mouseout);
-        inner.on("contextmenu".into(), &handle.on_contextmenu);
-        inner.on("touchstart".into(), &handle.on_touchstart);
-        inner.on("touchend".into(), &handle.on_touchend);
-        inner.on("touchcancel".into(), &handle.on_touchcancel);
-        inner.on("wheel".into(), &handle.on_wheel);
-
-        // Movement
-        inner.on("movestart".into(), &handle.on_movestart);
-        inner.on("move".into(), &handle.on_move);
-        inner.on("moveend".into(), &handle.on_moveend);
-        inner.on("dragstart".into(), &handle.on_dragstart);
-        inner.on("drag".into(), &handle.on_drag);
-        inner.on("dragend".into(), &handle.on_dragend);
-        inner.on("zoomstart".into(), &handle.on_zoomstart);
-        inner.on("zoom".into(), &handle.on_zoom);
-        inner.on("zoomend".into(), &handle.on_zoomend);
-        inner.on("rotatestart".into(), &handle.on_rotatestart);
-        inner.on("rotate".into(), &handle.on_rotate);
-        inner.on("rotateend".into(), &handle.on_rotateend);
-        inner.on("pitchstart".into(), &handle.on_pitchstart);
-        inner.on("pitch".into(), &handle.on_pitch);
-        inner.on("pitchend".into(), &handle.on_pitchend);
-        inner.on("boxzoomstart".into(), &handle.on_boxzoomstart);
-        inner.on("boxzoomend".into(), &handle.on_boxzoomend);
-        inner.on("boxzoomcancel".into(), &handle.on_boxzoomcancel);
-
-        // Lifecycle
-        inner.on("load".into(), &handle.on_load);
-        inner.on("render".into(), &handle.on_render);
-        inner.on("idle".into(), &handle.on_idle);
-        inner.on("error".into(), &handle.on_error);
-        inner.on("webglcontextlost".into(), &handle.on_webglcontextlost);
-        inner.on(
-            "webglcontextrestored".into(),
-            &handle.on_webglcontextrestored,
-        );
-
-        // Data loading
-        inner.on("data".into(), &handle.on_data);
-        inner.on("styledata".into(), &handle.on_styledata);
-        inner.on("sourcedata".into(), &handle.on_sourcedata);
-        inner.on("dataloading".into(), &handle.on_dataloading);
-        inner.on("styledataloading".into(), &handle.on_styledataloading);
-        inner.on("sourcedataloading".into(), &handle.on_sourcedataloading);
-        inner.on("styleimagemissing".into(), &handle.on_styleimagemissing);
-
-        let id = MapListenerId(uuid::Uuid::new_v4());
-        self.handles
-            .try_borrow_mut()
-            .map_err(|e| Error::Unexpected(format!("Could not get lock for handles: {e}")))?
-            .insert(id, handle);
-
-        Ok(id)
-    }
-
-    /// Add a listener to a specified event type and layer.
-    pub fn on_layer<F: MapEventListener + 'static>(
-        &self,
-        layer_id: &str,
-        f: F,
-    ) -> Result<MapListenerId> {
-        let handle = Handle::new(
-            self.weak_self
-                .try_borrow()
-                .map_err(|e| Error::Unexpected(format!("Could not borrow weak_self: {e}")))?
-                .clone()
-                .ok_or_else(|| Error::Unexpected("Weak reference is missing".to_string()))?,
-            f,
-        );
-        let inner = &self.inner;
-
-        inner.on_layer("resize".into(), layer_id.into(), &handle.on_resize);
-        inner.on_layer("remove".into(), layer_id.into(), &handle.on_remove);
-
-        // Interaction
-        inner.on_layer("mousedown".into(), layer_id.into(), &handle.on_mousedown);
-        inner.on_layer("mouseup".into(), layer_id.into(), &handle.on_mouseup);
-        inner.on_layer("preclick".into(), layer_id.into(), &handle.on_preclick);
-        inner.on_layer("click".into(), layer_id.into(), &handle.on_click);
-        inner.on_layer("dblclick".into(), layer_id.into(), &handle.on_dblclick);
-        inner.on_layer("mousemove".into(), layer_id.into(), &handle.on_mousemove);
-        inner.on_layer("mouseover".into(), layer_id.into(), &handle.on_mouseover);
-        inner.on_layer("mouseenter".into(), layer_id.into(), &handle.on_mouseenter);
-        inner.on_layer("mouseleave".into(), layer_id.into(), &handle.on_mouseleave);
-        inner.on_layer("mouseout".into(), layer_id.into(), &handle.on_mouseout);
-        inner.on_layer(
-            "contextmenu".into(),
-            layer_id.into(),
-            &handle.on_contextmenu,
-        );
-        inner.on_layer("touchstart".into(), layer_id.into(), &handle.on_touchstart);
-        inner.on_layer("touchend".into(), layer_id.into(), &handle.on_touchend);
-        inner.on_layer(
-            "touchcancel".into(),
-            layer_id.into(),
-            &handle.on_touchcancel,
-        );
-        inner.on_layer("wheel".into(), layer_id.into(), &handle.on_wheel);
-
-        // Movement
-        inner.on_layer("movestart".into(), layer_id.into(), &handle.on_movestart);
-        inner.on_layer("move".into(), layer_id.into(), &handle.on_move);
-        inner.on_layer("moveend".into(), layer_id.into(), &handle.on_moveend);
-        inner.on_layer("dragstart".into(), layer_id.into(), &handle.on_dragstart);
-        inner.on_layer("drag".into(), layer_id.into(), &handle.on_drag);
-        inner.on_layer("dragend".into(), layer_id.into(), &handle.on_dragend);
-        inner.on_layer("zoomstart".into(), layer_id.into(), &handle.on_zoomstart);
-        inner.on_layer("zoom".into(), layer_id.into(), &handle.on_zoom);
-        inner.on_layer("zoomend".into(), layer_id.into(), &handle.on_zoomend);
-        inner.on_layer(
-            "rotatestart".into(),
-            layer_id.into(),
-            &handle.on_rotatestart,
-        );
-        inner.on_layer("rotate".into(), layer_id.into(), &handle.on_rotate);
-        inner.on_layer("rotateend".into(), layer_id.into(), &handle.on_rotateend);
-        inner.on_layer("pitchstart".into(), layer_id.into(), &handle.on_pitchstart);
-        inner.on_layer("pitch".into(), layer_id.into(), &handle.on_pitch);
-        inner.on_layer("pitchend".into(), layer_id.into(), &handle.on_pitchend);
-        inner.on_layer(
-            "boxzoomstart".into(),
-            layer_id.into(),
-            &handle.on_boxzoomstart,
-        );
-        inner.on_layer("boxzoomend".into(), layer_id.into(), &handle.on_boxzoomend);
-        inner.on_layer(
-            "boxzoomcancel".into(),
-            layer_id.into(),
-            &handle.on_boxzoomcancel,
-        );
-
-        // Lifecycle
-        inner.on_layer("load".into(), layer_id.into(), &handle.on_load);
-        inner.on_layer("render".into(), layer_id.into(), &handle.on_render);
-        inner.on_layer("idle".into(), layer_id.into(), &handle.on_idle);
-        inner.on_layer("error".into(), layer_id.into(), &handle.on_error);
-        inner.on_layer(
-            "webglcontextlost".into(),
-            layer_id.into(),
-            &handle.on_webglcontextlost,
-        );
-        inner.on_layer(
-            "webglcontextrestored".into(),
-            layer_id.into(),
-            &handle.on_webglcontextrestored,
-        );
-
-        // Data loading
-        inner.on_layer("data".into(), layer_id.into(), &handle.on_data);
-        inner.on_layer("styledata".into(), layer_id.into(), &handle.on_styledata);
-        inner.on_layer("sourcedata".into(), layer_id.into(), &handle.on_sourcedata);
-        inner.on_layer(
-            "dataloading".into(),
-            layer_id.into(),
-            &handle.on_dataloading,
-        );
-        inner.on_layer(
-            "styledataloading".into(),
-            layer_id.into(),
-            &handle.on_styledataloading,
-        );
-        inner.on_layer(
-            "sourcedataloading".into(),
-            layer_id.into(),
-            &handle.on_sourcedataloading,
-        );
-        inner.on_layer(
-            "styleimagemissing".into(),
-            layer_id.into(),
-            &handle.on_styleimagemissing,
-        );
-
-        let id = MapListenerId(uuid::Uuid::new_v4());
-        self.handles
-            .try_borrow_mut()
-            .map_err(|e| Error::Unexpected(format!("Could not get lock for handles: {e}")))?
-            .insert(id, handle);
-
-        Ok(id)
-    }
+    run_macro_with_events!(impl_on_method);
+    run_macro_with_events!(impl_on_layer_method);
 
     pub fn add_marker(&self, marker: Rc<Marker>) -> MarkerId {
         let id = MarkerId(uuid::Uuid::new_v4());
