@@ -157,9 +157,9 @@ impl From<js::LngLat> for LngLat {
     }
 }
 
-impl ToString for LngLat {
-    fn to_string(&self) -> String {
-        self.inner.toString()
+impl std::fmt::Display for LngLat {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.inner.toString())
     }
 }
 
@@ -589,11 +589,10 @@ enum HandlerType {
     BoxZoom,
 }
 
-impl ToString for HandlerType {
-    fn to_string(&self) -> String {
-        use HandlerType::*;
+impl std::fmt::Display for HandlerType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            BoxZoom => "boxZoom".into(),
+            HandlerType::BoxZoom => write!(f, "boxZoom"),
         }
     }
 }

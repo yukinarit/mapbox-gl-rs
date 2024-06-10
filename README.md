@@ -40,7 +40,7 @@ Add the following CSS and JavaScript snippet in html, so that mapboxgl JavaScrip
 ```
 
 Build and run your app. If you are a [Yew](https://github.com/yewstack/yew) user, the following command will build and start a web server automatically
-```
+```bash
 trunk serve
 ```
 
