@@ -1,3 +1,6 @@
+// Because of https://github.com/rustwasm/wasm-bindgen/issues/3945 we need to allow this lint for now
+#![allow(clippy::empty_docs)]
+
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]

@@ -49,7 +49,7 @@ impl TryFrom<JsValue> for MapEvent {
 
         Ok(MapEvent {
             r#type,
-            original_event: web_sys::MouseEvent::try_from(event).ok(),
+            original_event: Some(web_sys::MouseEvent::from(event)),
         })
     }
 }
@@ -91,7 +91,7 @@ impl TryFrom<JsValue> for MapBoxZoomEvent {
 
         Ok(MapBoxZoomEvent {
             r#type,
-            original_event: web_sys::MouseEvent::try_from(event).unwrap(),
+            original_event: web_sys::MouseEvent::from(event),
         })
     }
 }
@@ -119,7 +119,7 @@ impl TryFrom<JsValue> for MapMouseEvent {
 
         Ok(MapMouseEvent {
             r#type,
-            original_event: web_sys::MouseEvent::try_from(event).unwrap(),
+            original_event: web_sys::MouseEvent::from(event),
             point: serde_wasm_bindgen::from_value(point)?,
             lng_lat: serde_wasm_bindgen::from_value(lng_lat)?,
             features: serde_wasm_bindgen::from_value(features).unwrap_or_default(),
@@ -154,7 +154,7 @@ impl TryFrom<JsValue> for MapTouchEvent {
 
         Ok(MapTouchEvent {
             r#type,
-            original_event: web_sys::TouchEvent::try_from(event).unwrap(),
+            original_event: web_sys::TouchEvent::from(event),
             point: serde_wasm_bindgen::from_value(point)?,
             points: serde_wasm_bindgen::from_value(points)?,
             lng_lat: serde_wasm_bindgen::from_value(lng_lat)?,
@@ -181,7 +181,7 @@ impl TryFrom<JsValue> for MapWheelEvent {
 
         Ok(MapWheelEvent {
             r#type,
-            original_event: web_sys::WheelEvent::try_from(event).unwrap(),
+            original_event: web_sys::WheelEvent::from(event),
         })
     }
 }
@@ -198,7 +198,7 @@ impl TryFrom<JsValue> for DragEvent {
         let event = get_property(&value, "DragEvent", "originalEvent")?;
 
         Ok(DragEvent {
-            original_event: web_sys::DragEvent::try_from(event).unwrap(),
+            original_event: web_sys::DragEvent::from(event),
         })
     }
 }
