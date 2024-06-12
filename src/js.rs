@@ -234,6 +234,10 @@ extern "C" {
     #[wasm_bindgen(method)]
     pub fn panTo(this: &Map, lngLat: &LngLat, options: JsValue, eventData: JsValue);
 
+    // Camera
+    #[wasm_bindgen(method)]
+    pub fn getCenter(this: &Map) -> LngLat;
+
     // --
 
     pub type BoxZoomHandler;

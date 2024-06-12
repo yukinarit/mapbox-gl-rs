@@ -161,4 +161,7 @@ impl Marker {
             inner: self.inner.getLngLat(),
         }
     }
+    pub fn set_lnglat(&self, pos: &LngLat) {
+        self.inner.setLngLat(&pos.inner)
+    }
 }

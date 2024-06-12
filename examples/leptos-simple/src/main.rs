@@ -13,7 +13,7 @@ fn MapComponent() -> impl IntoView {
     let map_ref = create_node_ref::<html::Div>();
     map_ref.on_load(move |m| {
         let _map_el = m.on_mount(move |map| {
-            let token = "pk.Your.Token";
+            let token = std::env!("MAPBOX_TOKEN");
             let map = Map::new(
                 MapOptions::new(token.into(), map.get_attribute("id").unwrap())
                     .center(LngLat::new(10.7, 59.9))
