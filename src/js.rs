@@ -137,6 +137,9 @@ extern "C" {
     #[wasm_bindgen(method)]
     pub fn setStyle(this: &Map, style: JsValue, options: JsValue) -> bool;
 
+    #[wasm_bindgen(method)]
+    pub fn getStyle(this: &Map) -> JsValue;
+
     // Images
 
     /// Add image resource.
@@ -199,7 +202,13 @@ extern "C" {
     pub fn getSource(this: &Map, id: String) -> JsValue;
 
     #[wasm_bindgen(method)]
-    pub fn addLayer(this: &Map, value: JsValue);
+    pub fn addLayer(this: &Map, value: JsValue, before_id: Option<String>);
+
+    #[wasm_bindgen(method)]
+    pub fn getLayer(this: &Map, id: String) -> JsValue;
+
+    #[wasm_bindgen(method)]
+    pub fn getPaintProperty(this: &Map, id: String, name: String) -> JsValue;
 
     #[wasm_bindgen(method, setter)]
     pub fn set_showTileBoundaries(this: &Map, v: bool) -> Map;

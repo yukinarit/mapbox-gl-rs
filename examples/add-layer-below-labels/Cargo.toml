@@ -1,0 +1,8 @@
+[package]
+name = "add-layer-below-labels"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+mapboxgl = { path = "../../" }
+leptos = { version = "0.6.11", features = ["csr"] }

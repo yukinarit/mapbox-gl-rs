@@ -2,7 +2,8 @@ use anyhow::Context;
 use futures::channel::oneshot;
 use gloo::timers::future::TimeoutFuture;
 use log::*;
-use mapboxgl::{event, layer, Layer, LngLat, Map, MapEventListener, MapOptions};
+use mapboxgl::layer::{LineCap, LineJoin, LineLayer};
+use mapboxgl::{event, LngLat, Map, MapEventListener, MapOptions};
 use std::{cell::RefCell, ops::Deref, rc::Rc};
 use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::JsFuture;
@@ -180,23 +181,13 @@ fn update(map: MapRef, route: &RouteState, second: &IntervalState) -> anyhow::Re
 fn add_data(map: &Map, json: geojson::FeatureCollection) -> anyhow::Result<()> {
     map.add_geojson_source("trace", geojson::GeoJson::FeatureCollection(json))?;
 
-    map.add_layer(&Layer {
-        id: "trace".into(),
-        r#type: "line".into(),
-        source: "trace".into(),
-        layout: Some(layer::Layout {
-            line_join: Some("round".into()),
-            line_cap: Some("round".into()),
-            icon_image: None,
-            icon_size: None,
-        }),
-        paint: Some(layer::Paint {
-            line_color: "yellow".into(),
-            line_width: 8,
-        }),
-        ..Default::default()
-    })?;
+    let mut ll = LineLayer::new("trace", "trace");
+    ll.paint.line_color = Some("yellow".into());
+    ll.paint.line_width = Some(8.0.into());
+    ll.layout.line_join = Some(LineJoin::Round.into());
+    ll.layout.line_cap = Some(LineCap::Round.into());
 
+    map.add_layer(ll, None)?;
     Ok(())
 }
 
