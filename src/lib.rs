@@ -886,6 +886,21 @@ impl Map {
         Ok(())
     }
 
+    pub fn add_geojson_source_from_url(
+        &self,
+        id: impl Into<String>,
+        data: impl Into<String>,
+    ) -> Result<()> {
+        let ser = serde_wasm_bindgen::Serializer::new().serialize_maps_as_objects(true);
+        let data = source::GeoJsonSourceSpec::new(data.into())
+            .serialize(&ser)
+            .map_err(|e| Error::BadGeoJson(e.to_string()))?;
+
+        self.inner.addSource(id.into(), data);
+
+        Ok(())
+    }
+
     pub fn get_geojson_source(&self, id: impl Into<String>) -> Option<source::GeoJsonSource> {
         let source = self.inner.getSource(id.into());
 
@@ -929,29 +944,25 @@ impl Map {
     }
 
     pub fn ease_to(&self, camera_options: CameraOptions, animation_options: AnimationOptions) {
-        self.inner.easeTo(
-            serde_wasm_bindgen::to_value(&CameraAnimationOptions {
-                camera_options,
-                animation_options,
-            })
-            .unwrap(),
-        );
-    }
-
-    pub fn fly_to(&self, camera_options: CameraOptions, animation_options: AnimationOptions) {
+        // This serializer is always needed when using serde's 'flatten' directive to js
+        let ser = serde_wasm_bindgen::Serializer::new().serialize_maps_as_objects(true);
         let options = CameraAnimationOptions {
             camera_options,
             animation_options,
         };
 
-        debug!(
-            "Map#fly_to {}",
-            serde_json::to_string_pretty(&options).unwrap()
-        );
+        self.inner.easeTo(options.serialize(&ser).unwrap());
+    }
 
-        self.inner.flyTo(
-            serde_wasm_bindgen::to_value(&options).unwrap(),
-            JsValue::null(),
-        );
+    pub fn fly_to(&self, camera_options: CameraOptions, animation_options: AnimationOptions) {
+        // This serializer is always needed when using serde's 'flatten' directive to js
+        let ser = serde_wasm_bindgen::Serializer::new().serialize_maps_as_objects(true);
+        let options = CameraAnimationOptions {
+            camera_options,
+            animation_options,
+        };
+
+        self.inner
+            .flyTo(options.serialize(&ser).unwrap(), JsValue::null());
     }
 }

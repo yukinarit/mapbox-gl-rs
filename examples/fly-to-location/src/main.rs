@@ -1,7 +1,7 @@
 use futures::channel::oneshot;
 use js_sys::Math;
 use log::*;
-use mapboxgl::{event, CameraOptions, LngLat, Map, MapEventListener, MapOptions};
+use mapboxgl::{event, AnimationOptions, CameraOptions, LngLat, Map, MapEventListener, MapOptions};
 use std::{cell::RefCell, rc::Rc};
 use yew::prelude::*;
 use yew::{use_effect_with_deps, use_mut_ref};
@@ -55,10 +55,10 @@ fn app() -> Html {
       <div>
         <div id="map" style="width: 100vw; height: 100vh;"></div>
         <button id="fly" onclick={Callback::from(move |_| {
-            (*map.try_borrow().unwrap()).as_ref().unwrap().jump_to(CameraOptions {
+            (*map.try_borrow().unwrap()).as_ref().unwrap().fly_to(CameraOptions {
                 center: LngLat::new((Math::random()-0.5)*360.0, (Math::random()-0.5)*100.0),
                 ..Default::default()
-            });
+            }, AnimationOptions{essential: Some(true),..Default::default()});
         })}>{ "Fly" }</button>
       <br/>
       </div>

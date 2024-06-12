@@ -31,4 +31,8 @@ impl GeoJsonSource {
 
         Ok(())
     }
+    pub fn set_data_js_value(&mut self, data: &wasm_bindgen::JsValue) -> Result<()> {
+        self.inner.GeoJSONSource_setData(data);
+        Ok(())
+    }
 }
