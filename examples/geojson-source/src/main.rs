@@ -1,6 +1,7 @@
 use futures::channel::oneshot;
 use log::*;
-use mapboxgl::{event, layer, Layer, LngLat, Map, MapEventListener, MapOptions};
+use mapboxgl::layer::{LineCap, LineJoin, LineLayer};
+use mapboxgl::{event, LngLat, Map, MapEventListener, MapOptions};
 use std::{cell::RefCell, rc::Rc};
 use yew::prelude::*;
 use yew::{use_effect_with_deps, use_mut_ref};
@@ -49,23 +50,13 @@ impl MapEventListener for Listener {
         )
         .unwrap();
 
-        map.add_layer(&Layer {
-            id: "route".into(),
-            r#type: "line".into(),
-            source: "route".into(),
-            layout: Some(layer::Layout {
-                line_join: Some("round".into()),
-                line_cap: Some("round".into()),
-                icon_image: None,
-                icon_size: None,
-            }),
-            paint: Some(layer::Paint {
-                line_color: "#888".into(),
-                line_width: 8,
-            }),
-            ..Default::default()
-        })
-        .unwrap();
+        let mut line_layer = LineLayer::new("route", "route");
+        line_layer.layout.line_join = Some(LineJoin::Round.into());
+        line_layer.layout.line_cap = Some(LineCap::Round.into());
+        line_layer.paint.line_color = Some("#888".into());
+        line_layer.paint.line_width = Some(8.0.into());
+
+        map.add_layer(line_layer, None).unwrap();
     }
 }
 
