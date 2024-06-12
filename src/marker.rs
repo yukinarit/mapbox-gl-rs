@@ -24,7 +24,6 @@ macro_rules! impl_event_marker {
     ($m: ident, $f:ident, $event:ident, JsValue) => {
         Closure::new(enclose!(
             ($m, $f) move |value: JsValue| {
-                web_sys::console::debug_2(&JsValue::from(stringify!($event)), &value);
                 let Some(marker) = $m.upgrade() else {
                     warn!("Failed to get a marker handle");
                     return;
