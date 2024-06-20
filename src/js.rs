@@ -183,9 +183,11 @@ extern "C" {
     #[wasm_bindgen(method)]
     pub fn triggerRepaint(this: &Map);
 
+    // Querying features
     #[wasm_bindgen(method)]
     pub fn queryRenderedFeatures(map: &Map, geometry: JsValue, options: JsValue) -> JsValue;
 
+    // Sources
     #[wasm_bindgen(method)]
     pub fn addSource(this: &Map, id: String, source: JsValue);
 
@@ -201,15 +203,59 @@ extern "C" {
     #[wasm_bindgen(method)]
     pub fn getSource(this: &Map, id: String) -> JsValue;
 
+    // Layer
     #[wasm_bindgen(method)]
     pub fn addLayer(this: &Map, value: JsValue, before_id: Option<String>);
+
+    #[wasm_bindgen(method)]
+    pub fn getSlot(this: &Map, id: String) -> Option<String>;
+
+    #[wasm_bindgen(method)]
+    pub fn setSlot(this: &Map, id: String, slot: String) -> JsValue;
+
+    #[wasm_bindgen(method)]
+    pub fn moveLayer(this: &Map, id: String, before_id: Option<String>) -> JsValue;
+
+    #[wasm_bindgen(method)]
+    pub fn removeLayer(this: &Map, id: String) -> JsValue;
 
     #[wasm_bindgen(method)]
     pub fn getLayer(this: &Map, id: String) -> JsValue;
 
     #[wasm_bindgen(method)]
+    pub fn setLayerZoomRange(this: &Map, id: String, min_zoom: f64, max_zoom: f64) -> JsValue;
+
+    #[wasm_bindgen(method)]
+    pub fn setFilter(this: &Map, id: String, filter: JsValue, options: JsValue) -> JsValue;
+
+    #[wasm_bindgen(method)]
+    pub fn getFilter(this: &Map, id: String) -> JsValue;
+
+    #[wasm_bindgen(method)]
+    pub fn setPaintProperty(
+        this: &Map,
+        id: String,
+        name: String,
+        value: JsValue,
+        options: JsValue,
+    ) -> JsValue;
+
+    #[wasm_bindgen(method)]
     pub fn getPaintProperty(this: &Map, id: String, name: String) -> JsValue;
 
+    #[wasm_bindgen(method)]
+    pub fn setLayoutProperty(
+        this: &Map,
+        id: String,
+        name: String,
+        value: JsValue,
+        options: JsValue,
+    ) -> JsValue;
+
+    #[wasm_bindgen(method)]
+    pub fn getLayoutProperty(this: &Map, id: String, name: String) -> JsValue;
+
+    // Debug Features
     #[wasm_bindgen(method, setter)]
     pub fn set_showTileBoundaries(this: &Map, v: bool) -> Map;
 
