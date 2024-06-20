@@ -1,11 +1,12 @@
 use futures::channel::oneshot;
 use geojson::{Feature, FeatureCollection, GeoJson, Geometry, Value};
 use log::*;
+use mapboxgl::layer::SymbolLayer;
 use std::{cell::RefCell, rc::Rc};
 use yew::prelude::*;
 use yew::{use_effect_with_deps, use_mut_ref};
 
-use mapboxgl::{event, layer, ImageOptions, Layer, LngLat, Map, MapEventListener, MapOptions};
+use mapboxgl::{event, ImageOptions, LngLat, Map, MapEventListener, MapOptions};
 
 struct Listener {
     tx: Option<oneshot::Sender<()>>,
@@ -43,19 +44,10 @@ impl MapEventListener for Listener {
                     )
                     .unwrap();
 
-                    map2.add_layer(&Layer {
-                        id: "points".into(),
-                        r#type: "symbol".into(),
-                        source: "point".into(),
-                        layout: Some(layer::Layout {
-                            line_join: None,
-                            line_cap: None,
-                            icon_image: Some("cat".into()),
-                            icon_size: Some(0.25.into()),
-                        }),
-                        ..Default::default()
-                    })
-                    .unwrap();
+                    let mut sl = SymbolLayer::new("points", "point");
+                    sl.layout.icon_image = Some("cat".into());
+                    sl.layout.icon_size = Some(0.25.into());
+                    map2.add_layer(sl, None).unwrap();
                 }
             },
         );

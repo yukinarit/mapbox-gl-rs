@@ -1,0 +1,28 @@
+[package]
+name = "custom-layer"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+mapboxgl = { path = "../../" }
+leptos = { version = "0.6.11", features = ["csr"] }
+console_error_panic_hook = "0.1.7"
+
+[dependencies.web-sys]
+version = "0.3.69"
+features = [
+  'console',
+  'Document',
+  'Element',
+  'HtmlCanvasElement',
+  'WebGlBuffer',
+  'WebGlFramebuffer',
+  'WebGlTexture',
+  'WebGlVertexArrayObject',
+  'WebGl2RenderingContext',
+  'WebGlUniformLocation',
+  'WebGlProgram',
+  'WebGlShader',
+  'Window',
+  'Performance',
+]

@@ -55,7 +55,7 @@ trunk serve
 	* [ ] [Working with events](https://docs.mapbox.com/mapbox-gl-js/api/map/#instance-members-working-with-events)
 	* [ ] [Sources](https://docs.mapbox.com/mapbox-gl-js/api/map/#instance-members-sources)
 	* [x] [Images](https://docs.mapbox.com/mapbox-gl-js/api/map/#instance-members-images)
-	* [ ] [Layers](https://docs.mapbox.com/mapbox-gl-js/api/map/#instance-members-layers)
+	* [x] [Layers](https://docs.mapbox.com/mapbox-gl-js/api/map/#instance-members-layers)
 	* [ ] [Style properties](https://docs.mapbox.com/mapbox-gl-js/api/map/#instance-members-style-properties)
 	* [ ] [Feature state](https://docs.mapbox.com/mapbox-gl-js/api/map/#instance-members-feature-state)
 	* [ ] [Lifecycle](https://docs.mapbox.com/mapbox-gl-js/api/map/#instance-members-lifecycle)
