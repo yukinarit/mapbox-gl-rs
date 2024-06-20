@@ -25,7 +25,7 @@ impl mapboxgl::MapEventListener for Listener {
 
 #[component]
 fn MapComponent() -> impl IntoView {
-    let triangle = vec![[25.004, 60.239], [13.403, 52.562], [30.498, 50.541]];
+    let triangle = [[25.004, 60.239], [13.403, 52.562], [30.498, 50.541]];
     let vertex_data: Vec<f32> = triangle
         .iter()
         .flat_map(|p| {
@@ -106,8 +106,8 @@ fn MapComponent() -> impl IntoView {
 }
 
 fn create_program(gl: &GL, vert_shader: &str, frag_shader: &str) -> Result<WebGlProgram, String> {
-    let vert_shader = compile_shader(gl, GL::VERTEX_SHADER, &vert_shader)?;
-    let frag_shader = compile_shader(gl, GL::FRAGMENT_SHADER, &frag_shader)?;
+    let vert_shader = compile_shader(gl, GL::VERTEX_SHADER, vert_shader)?;
+    let frag_shader = compile_shader(gl, GL::FRAGMENT_SHADER, frag_shader)?;
     let program = gl
         .create_program()
         .ok_or_else(|| String::from("Unable to create shader object"))?;
