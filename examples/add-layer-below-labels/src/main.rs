@@ -1,7 +1,9 @@
 use leptos::*;
 use mapboxgl::FillLayer;
 use mapboxgl::{LngLat, Map, MapOptions};
+use std::any::Any;
 use std::rc::Rc;
+use web_sys::wasm_bindgen::JsValue;
 
 pub fn main() {
     leptos::mount_to_body(|| view! { <MapComponent/> });
@@ -46,12 +48,27 @@ fn MapComponent() -> impl IntoView {
             let token = std::env!("MAPBOX_TOKEN");
             let opts = MapOptions::new(token.into(), map.get_attribute("id").unwrap())
                 .center(LngLat::new(-88.137343, 35.137451))
-                .zoom(3.0)
-                .style("mapbox://styles/mapbox/streets-v12".into());
+                .zoom(5.0)
+                .style("mapbox://styles/mapbox/standard".into());
             let map = Map::new(opts).unwrap();
             map.on(MapListener {}).unwrap();
             map_store.set(Some(map));
         });
     });
-    view! {<div id="map" style="position: absolute; top: 0; bottom: 0; width: 100%;" node_ref=map_ref/>}
+
+    // 'top' slot is meant for use with symbols, see: https://docs.mapbox.com/mapbox-gl-js/example/geojson-layer-in-slot/
+    let values = ["bottom", "middle"];
+    view! {
+        <>
+            <div id="map" style="position: absolute; top: 0; bottom: 0; width: 100%;" node_ref=map_ref/>
+            <div id="menu" style="position: absolute; background: #efefef; padding: 10px; font-family: 'Open Sans', sans-serif;">
+                {values.into_iter()
+                    .map(|n| view! {
+                        <label for=n>"move layer to: "{n}</label>
+                        <input id=n type="radio" name="rtoggle" value=n on:change={move |_e| map_store.get_untracked().unwrap().set_slot("urban-areas-fill", n).unwrap()} />
+                    })
+                    .collect::<Vec<_>>()}
+            </div>
+        </>
+    }
 }

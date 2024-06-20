@@ -25,6 +25,7 @@ use std::{
     rc::{Rc, Weak},
 };
 use wasm_bindgen::{prelude::*, JsCast};
+// use web_sys::window;
 
 use callback::CallbackStore;
 pub use error::{Error, Result};
@@ -544,6 +545,13 @@ impl Map {
 
         let inner = crate::js::Map::new(options);
 
+        // js_sys::Reflect::set(
+        //     &JsValue::from(web_sys::window().unwrap()),
+        //     &JsValue::from("mappy"),
+        //     &inner,
+        // )
+        // .unwrap();
+
         let map = Rc::new(Map {
             inner,
             handles: RefCell::new(HashMap::new()),
@@ -883,15 +891,51 @@ impl Map {
         Ok(())
     }
 
+    pub fn get_slot(&self, id: impl Into<String>) -> Option<String> {
+        self.inner.getSlot(id.into())
+    }
+
+    pub fn set_slot(&self, id: impl Into<String>, slot: impl Into<String>) -> Result<()> {
+        self.inner.setSlot(id.into(), slot.into());
+        Ok(())
+    }
+
+    pub fn move_layer(&self, id: impl Into<String>, before_id: Option<String>) -> Result<()> {
+        self.inner.moveLayer(id.into(), before_id);
+        Ok(())
+    }
+
+    pub fn remove_layer(&self, id: impl Into<String>) -> Result<()> {
+        self.inner.removeLayer(id.into());
+        Ok(())
+    }
+
     pub fn get_layer(&self, id: impl Into<String>) -> Result<layer::GetLayer> {
         // Notice that in the two examples referenced from: https://docs.mapbox.com/mapbox-gl-js/api/map/#map#getlayer
         // The layer itself is never used. The map.getLayer(id) function is only really used to check if a layer
-        // exists or not. The actual return JsValue from `getLayer` is also basically useless for doing anything
-        // else than that. So for that reason, this function does not return a proper Layer. It's just not parasble.
+        // exists or not. The actual return JsValue from `getLayer` seems basically useless for doing anything
+        // else than that. So for that reason, this function does not return a proper Layer. It's just not parsable.
         let layer = self.inner.getLayer(id.into());
         serde_wasm_bindgen::from_value(layer).map_err(Error::from)
     }
 
+    // #[wasm_bindgen(method)]
+    // pub fn setLayerZoomRange(this: &Map, id: String, min_zoom: f64, max_zoom: f64) -> JsValue;
+
+    // #[wasm_bindgen(method)]
+    // pub fn setFilter(this: &Map, id: String, filter: JsValue, options: JsValue) -> JsValue;
+
+    // #[wasm_bindgen(method)]
+    // pub fn getFilter(this: &Map, id: String) -> JsValue;
+
+    // #[wasm_bindgen(method)]
+    // pub fn setPaintProperty(
+    //     this: &Map,
+    //     id: String,
+    //     name: String,
+    //     value: JsValue,
+    //     options: JsValue,
+    // ) -> JsValue;
     pub fn get_paint_property(
         &self,
         id: impl Into<String>,
@@ -900,6 +944,21 @@ impl Map {
         let expr = self.inner.getPaintProperty(id.into(), name.into());
         serde_wasm_bindgen::from_value(expr).map_err(Error::from)
     }
+
+    // #[wasm_bindgen(method)]
+    // pub fn getPaintProperty(this: &Map, id: String, name: String) -> JsValue;
+
+    // #[wasm_bindgen(method)]
+    // pub fn setLayoutProperty(
+    //     this: &Map,
+    //     id: String,
+    //     name: String,
+    //     value: JsValue,
+    //     options: JsValue,
+    // ) -> JsValue;
+
+    // #[wasm_bindgen(method)]
+    // pub fn getLayoutProperty(this: &Map, id: String, name: String) -> JsValue;
 
     pub fn query_rendered_features<G: IntoQueryGeometry>(
         &self,
