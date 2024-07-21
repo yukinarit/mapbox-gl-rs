@@ -30,13 +30,11 @@ use geometry::IntoQueryGeometry;
 pub use handler::BoxZoomHandler;
 pub use id::{CallbackId, MapListenerId, MarkerId};
 pub use image::{Image, ImageOptions};
-pub use layer::{Layer, Layout, LayoutProperty};
+pub use layer::{Layer, Layout, LayoutProperty, Paint};
 pub use marker::{Marker, MarkerEventListener, MarkerOptions};
 pub use popup::{Popup, PopupOptions};
 pub use source::GeoJsonSource;
-pub use style::StyleOptions;
-
-const DEFAULT_STYLE: &str = "mapbox://styles/mapbox/streets-v11";
+pub use style::{Source, Sources, Style, StyleOptions, StyleOrRef};
 
 #[wasm_bindgen]
 #[derive(Serialize, Deserialize)]
@@ -243,7 +241,7 @@ pub struct MapOptions {
     double_click_zoom: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     drag_pan: Option<bool>,
-    style: String,
+    style: StyleOrRef,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     projection: Option<String>,
@@ -278,7 +276,7 @@ impl MapOptions {
             custom_attribution: None,
             double_click_zoom: None,
             drag_pan: None,
-            style: DEFAULT_STYLE.into(),
+            style: Default::default(),
             projection: None,
             refresh_expired_tiles: None,
             render_world_copies: None,
@@ -288,7 +286,7 @@ impl MapOptions {
         }
     }
 
-    pub fn style(mut self, style: String) -> MapOptions {
+    pub fn style(mut self, style: StyleOrRef) -> MapOptions {
         self.style = style;
         self
     }
@@ -309,7 +307,8 @@ impl MapOptions {
     }
 
     pub fn build(&self) -> JsValue {
-        serde_wasm_bindgen::to_value(&self).unwrap()
+        self.serialize(&serde_wasm_bindgen::Serializer::json_compatible())
+            .unwrap()
     }
 }
 macro_rules! run_macro_with_events {
@@ -720,7 +719,7 @@ impl Map {
             .set_handler(&HandlerType::BoxZoom.to_string(), inner);
     }
 
-    pub fn set_style(&self, style: impl Into<String>, options: crate::style::StyleOptions) {
+    pub fn set_style(&self, style: StyleOrRef, options: StyleOptions) {
         self.inner.setStyle(
             style.into(),
             serde_wasm_bindgen::to_value(&options).unwrap(),

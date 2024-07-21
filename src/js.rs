@@ -135,7 +135,7 @@ extern "C" {
     pub fn isRotating(this: &Map) -> bool;
 
     #[wasm_bindgen(method)]
-    pub fn setStyle(this: &Map, style: String, options: JsValue) -> bool;
+    pub fn setStyle(this: &Map, style: JsValue, options: JsValue) -> bool;
 
     // Images
 
