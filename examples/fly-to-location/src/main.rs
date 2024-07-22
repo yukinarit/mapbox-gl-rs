@@ -1,7 +1,9 @@
 use futures::channel::oneshot;
 use js_sys::Math;
 use log::*;
-use mapboxgl::{event, AnimationOptions, CameraOptions, LngLat, Map, MapEventListener, MapOptions};
+use mapboxgl::{
+    event, AnimationOptions, CameraOptions, LngLat, Map, MapEventListener, MapOptions, StyleOrRef,
+};
 use std::{cell::RefCell, rc::Rc};
 use yew::prelude::*;
 use yew::{use_effect_with_deps, use_mut_ref};
@@ -69,7 +71,7 @@ pub fn create_map() -> Rc<Map> {
     let token = std::env!("MAPBOX_TOKEN");
 
     let opts = MapOptions::new(token.into(), "map".into())
-        .style("mapbox://styles/mapbox/streets-v12".into())
+        .style(StyleOrRef::Ref("mapbox://styles/mapbox/streets-v12".into()))
         .center(LngLat::new(-74.5, 40.0))
         .zoom(4.0);
 
