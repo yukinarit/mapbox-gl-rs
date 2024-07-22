@@ -5,7 +5,9 @@ use std::{cell::RefCell, rc::Rc};
 use yew::prelude::*;
 use yew::{use_effect_with_deps, use_mut_ref};
 
-use mapboxgl::{event, layer, ImageOptions, Layer, LngLat, Map, MapEventListener, MapOptions};
+use mapboxgl::{
+    event, layer, ImageOptions, Layer, LngLat, Map, MapEventListener, MapOptions, StyleOrRef,
+};
 
 struct Listener {
     tx: Option<oneshot::Sender<()>>,
@@ -108,7 +110,7 @@ pub fn create_map() -> Rc<Map> {
     let opts = MapOptions::new(token.into(), "map".into())
         .center(LngLat::new(-77.432, 25.0306))
         .zoom(10.0)
-        .style("mapbox://styles/mapbox/dark-v11".into());
+        .style(StyleOrRef::Ref("mapbox://styles/mapbox/dark-v11".into()));
 
     Map::new(opts).unwrap()
 }

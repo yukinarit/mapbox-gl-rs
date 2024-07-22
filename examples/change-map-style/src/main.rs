@@ -1,6 +1,6 @@
 use futures::channel::oneshot;
 use log::*;
-use mapboxgl::{event, LngLat, Map, MapEventListener, MapOptions, StyleOptions};
+use mapboxgl::{event, LngLat, Map, MapEventListener, MapOptions, StyleOptions, StyleOrRef};
 use std::{cell::RefCell, rc::Rc};
 use web_sys::HtmlInputElement;
 use yew::prelude::*;
@@ -51,7 +51,9 @@ pub fn create_map() -> Rc<Map> {
     let opts = MapOptions::new(token.into(), "map".into())
         .center(LngLat::new(-2.81361, 36.77271))
         .zoom(13.0)
-        .style("mapbox://styles/mapbox/satellite-streets-v12".into());
+        .style(StyleOrRef::Ref(
+            "mapbox://styles/mapbox/satellite-streets-v12".into(),
+        ));
     Map::new(opts).unwrap()
 }
 
@@ -61,7 +63,7 @@ fn app() -> Html {
     let on_click = {
         Callback::from(move |e: Event| {
             let value = e.target_dyn_into::<HtmlInputElement>().unwrap().value();
-            let style = format!("mapbox://styles/mapbox/{}", value);
+            let style = StyleOrRef::Ref(format!("mapbox://styles/mapbox/{}", value));
             map.borrow_mut()
                 .as_ref()
                 .unwrap()
