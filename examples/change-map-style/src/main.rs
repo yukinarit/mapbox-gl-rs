@@ -51,9 +51,7 @@ pub fn create_map() -> Rc<Map> {
     let opts = MapOptions::new(token.into(), "map".into())
         .center(LngLat::new(-2.81361, 36.77271))
         .zoom(13.0)
-        .style(StyleOrRef::Ref(
-            "mapbox://styles/mapbox/satellite-streets-v12".into(),
-        ));
+        .style_ref("mapbox://styles/mapbox/satellite-streets-v12".into());
     Map::new(opts).unwrap()
 }
 

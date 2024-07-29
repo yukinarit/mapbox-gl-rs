@@ -1,4 +1,4 @@
-use mapboxgl::{Layer, LngLat, Map, MapOptions, Source, Sources, Style, StyleOrRef};
+use mapboxgl::{Layer, LngLat, Map, MapOptions, Source, Sources, Style};
 use std::{cell::RefCell, rc::Rc};
 use yew::prelude::*;
 use yew::{use_effect_with_deps, use_mut_ref};
@@ -50,23 +50,22 @@ pub fn create_map() -> Rc<Map> {
             ],
         },
     );
-    let mut layers: Vec<Layer> = vec![];
-    layers.push(Layer {
+    let layers: Vec<Layer> = vec![Layer {
         id: "carto-dark-layer".into(),
         r#type: "raster".into(),
         source: "carto-dark".into(),
         minzoom: Some(0.0),
         maxzoom: Some(21.0),
         ..Default::default()
-    });
+    }];
     let opts = MapOptions::new(token.into(), "map".into())
         .center(LngLat::new(139.7647863, 35.6812373))
         .zoom(15.0)
-        .style(StyleOrRef::Style(Style {
+        .style(Style {
             version: 8,
             sources,
             layers,
-        }));
+        });
 
     Map::new(opts).unwrap()
 }

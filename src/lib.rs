@@ -286,8 +286,13 @@ impl MapOptions {
         }
     }
 
-    pub fn style(mut self, style: StyleOrRef) -> MapOptions {
-        self.style = style;
+    pub fn style(mut self, style: Style) -> MapOptions {
+        self.style = StyleOrRef::Style(style);
+        self
+    }
+
+    pub fn style_ref(mut self, style: String) -> MapOptions {
+        self.style = StyleOrRef::Ref(style);
         self
     }
 

@@ -1,5 +1,5 @@
 use geojson::GeoJson;
-use mapboxgl::{LngLat, Map, MapOptions, Marker, MarkerOptions, StyleOrRef};
+use mapboxgl::{LngLat, Map, MapOptions, Marker, MarkerOptions};
 use std::str::FromStr;
 use std::{cell::RefCell, rc::Rc};
 use wasm_bindgen::JsCast;
@@ -73,7 +73,7 @@ pub fn create_map() -> Rc<Map> {
     let opts = MapOptions::new(token.into(), "map".into())
         .center(LngLat::new(-65.017, -16.457))
         .zoom(5.0)
-        .style(StyleOrRef::Ref("mapbox://styles/mapbox/streets-v12".into()));
+        .style_ref("mapbox://styles/mapbox/streets-v12".into());
 
     Map::new(opts).unwrap()
 }
