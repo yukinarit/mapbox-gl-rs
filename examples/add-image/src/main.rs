@@ -5,9 +5,7 @@ use std::{cell::RefCell, rc::Rc};
 use yew::prelude::*;
 use yew::{use_effect_with_deps, use_mut_ref};
 
-use mapboxgl::{
-    event, layer, ImageOptions, Layer, LngLat, Map, MapEventListener, MapOptions,
-};
+use mapboxgl::{event, layer, ImageOptions, Layer, LngLat, Map, MapEventListener, MapOptions};
 
 struct Listener {
     tx: Option<oneshot::Sender<()>>,

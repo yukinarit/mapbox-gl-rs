@@ -1,9 +1,7 @@
 use futures::channel::oneshot;
 use js_sys::Math;
 use log::*;
-use mapboxgl::{
-    event, AnimationOptions, CameraOptions, LngLat, Map, MapEventListener, MapOptions,
-};
+use mapboxgl::{event, AnimationOptions, CameraOptions, LngLat, Map, MapEventListener, MapOptions};
 use std::{cell::RefCell, rc::Rc};
 use yew::prelude::*;
 use yew::{use_effect_with_deps, use_mut_ref};
