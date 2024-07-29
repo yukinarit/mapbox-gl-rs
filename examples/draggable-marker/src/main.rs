@@ -2,7 +2,6 @@ use futures::channel::oneshot;
 use log::info;
 use mapboxgl::{
     event, LngLat, Map, MapEventListener, MapOptions, Marker, MarkerEventListener, MarkerOptions,
-    StyleOrRef,
 };
 use std::{cell::RefCell, rc::Rc};
 use web_sys::{Document, Element};
@@ -80,7 +79,7 @@ pub fn create_map() -> Rc<Map> {
     let opts = MapOptions::new(token.into(), "map".into())
         .center(LngLat::new(0.0, 0.0))
         .zoom(2.0)
-        .style(StyleOrRef::Ref("mapbox://styles/mapbox/streets-v12".into()));
+        .style_ref("mapbox://styles/mapbox/streets-v12".into());
 
     Map::new(opts).unwrap()
 }

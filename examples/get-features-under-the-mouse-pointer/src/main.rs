@@ -1,6 +1,6 @@
 use futures::channel::oneshot;
 use log::*;
-use mapboxgl::{event, LngLat, Map, MapEventListener, MapOptions, QueryFeatureOptions, StyleOrRef};
+use mapboxgl::{event, LngLat, Map, MapEventListener, MapOptions, QueryFeatureOptions};
 use serde::Serialize;
 use std::{cell::RefCell, rc::Rc};
 use yew::prelude::*;
@@ -99,7 +99,7 @@ pub fn create_map() -> Rc<Map> {
 
     let opts = MapOptions::new(token.into(), "map".into())
         .center(LngLat::new(-97.33366638422012, 37.69990857165871))
-        .style(StyleOrRef::Ref("mapbox://styles/mapbox/streets-v12".into()))
+        .style_ref("mapbox://styles/mapbox/streets-v12".into())
         .zoom(3.0);
 
     Map::new(opts).unwrap()
