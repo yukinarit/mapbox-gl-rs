@@ -724,9 +724,16 @@ impl Map {
             .set_handler(&HandlerType::BoxZoom.to_string(), inner);
     }
 
-    pub fn set_style(&self, style: StyleOrRef, options: StyleOptions) {
+    pub fn set_style(&self, style: Style, options: StyleOptions) {
         self.inner.setStyle(
             style.into(),
+            serde_wasm_bindgen::to_value(&options).unwrap(),
+        );
+    }
+
+    pub fn set_style_ref(&self, style: impl Into<String>, options: StyleOptions) {
+        self.inner.setStyle(
+            style.into().into(),
             serde_wasm_bindgen::to_value(&options).unwrap(),
         );
     }
