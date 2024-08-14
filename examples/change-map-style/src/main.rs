@@ -61,11 +61,11 @@ fn app() -> Html {
     let on_click = {
         Callback::from(move |e: Event| {
             let value = e.target_dyn_into::<HtmlInputElement>().unwrap().value();
-            let style = StyleOrRef::Ref(format!("mapbox://styles/mapbox/{}", value));
+            let style = format!("mapbox://styles/mapbox/{}", value);
             map.borrow_mut()
                 .as_ref()
                 .unwrap()
-                .set_style(style, StyleOptions::new());
+                .set_style_ref(style, StyleOptions::new());
         })
     };
 
