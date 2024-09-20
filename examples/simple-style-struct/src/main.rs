@@ -1,4 +1,6 @@
-use mapboxgl::{Layer, LngLat, Map, MapOptions, Source, Sources, Style};
+use mapboxgl::layer::{IntoLayer, Layer, RasterLayer};
+use mapboxgl::style::Sources;
+use mapboxgl::{LngLat, Map, MapOptions, Source, Style};
 use std::{cell::RefCell, rc::Rc};
 use yew::prelude::*;
 use yew::{use_effect_with_deps, use_mut_ref};
@@ -42,22 +44,23 @@ pub fn create_map() -> Rc<Map> {
         "carto-dark".into(),
         Source {
             r#type: "raster".into(),
-            tiles: vec![
+            tiles: Some(vec![
                 "http://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png".into(),
                 "http://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png".into(),
                 "http://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png".into(),
                 "http://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png".into(),
-            ],
+            ]),
+            ..Default::default()
         },
     );
-    let layers: Vec<Layer> = vec![Layer {
+    let layers: Vec<Layer> = vec![RasterLayer {
         id: "carto-dark-layer".into(),
-        r#type: "raster".into(),
         source: "carto-dark".into(),
         minzoom: Some(0.0),
         maxzoom: Some(21.0),
         ..Default::default()
-    }];
+    }
+    .into_layer()];
     let opts = MapOptions::new(token.into(), "map".into())
         .center(LngLat::new(139.7647863, 35.6812373))
         .zoom(15.0)
@@ -65,6 +68,7 @@ pub fn create_map() -> Rc<Map> {
             version: 8,
             sources,
             layers,
+            ..Default::default()
         });
 
     Map::new(opts).unwrap()

@@ -1,9 +1,7 @@
-use leptos::*;
+use leptos::{logging::log, *};
 use mapboxgl::FillLayer;
 use mapboxgl::{LngLat, Map, MapOptions};
-use std::any::Any;
 use std::rc::Rc;
-use web_sys::wasm_bindgen::JsValue;
 
 pub fn main() {
     leptos::mount_to_body(|| view! { <MapComponent/> });
@@ -13,6 +11,7 @@ struct MapListener {}
 
 impl mapboxgl::MapEventListener for MapListener {
     fn on_load(&mut self, map: Rc<mapboxgl::Map>, _e: mapboxgl::event::MapBaseEvent) {
+        log!("Running on load!");
         map.add_geojson_source_from_url(
             "urban-areas",
             "https://docs.mapbox.com/mapbox-gl-js/assets/ne_50m_urban_areas.geojson",
@@ -21,12 +20,10 @@ impl mapboxgl::MapEventListener for MapListener {
 
         let mut first_symbol_layer: Option<mapboxgl::layer::SymbolLayer> = None;
 
-        if let Some(layers) = map.get_style().layers {
-            for layer in layers {
-                if let mapboxgl::layer::Layer::Symbol(l) = layer {
-                    first_symbol_layer = Some(l);
-                    break;
-                }
+        for layer in map.get_style().layers {
+            if let mapboxgl::layer::Layer::Symbol(l) = layer {
+                first_symbol_layer = Some(l);
+                break;
             }
         }
 
@@ -34,7 +31,7 @@ impl mapboxgl::MapEventListener for MapListener {
         urban_areas_fill.paint.fill_color = Some("#f08".into());
         urban_areas_fill.paint.fill_opacity = Some(0.4.into());
 
-        map.add_layer(urban_areas_fill, first_symbol_layer.map(|l| l.inner.id))
+        map.add_layer(urban_areas_fill, first_symbol_layer.map(|l| l.id))
             .unwrap();
     }
 }
@@ -49,7 +46,7 @@ fn MapComponent() -> impl IntoView {
             let opts = MapOptions::new(token.into(), map.get_attribute("id").unwrap())
                 .center(LngLat::new(-88.137343, 35.137451))
                 .zoom(5.0)
-                .style("mapbox://styles/mapbox/standard".into());
+                .style_ref("mapbox://styles/mapbox/standard".into());
             let map = Map::new(opts).unwrap();
             map.on(MapListener {}).unwrap();
             map_store.set(Some(map));

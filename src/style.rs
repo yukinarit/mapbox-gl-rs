@@ -1,4 +1,4 @@
-use crate::Layer;
+use crate::layer::Layer;
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -49,11 +49,39 @@ impl FromWasmAbi for StyleOrRef {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Style {
     pub version: u32,
     pub sources: Sources,
     pub layers: Vec<Layer>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sprite: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub glyphs: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub metadata: Option<Metadata>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub center: Option<Vec<f64>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub zoom: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bearing: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pitch: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub created: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub modified: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub owner: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub visibility: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub draft: Option<bool>,
     // TODO: flesh out optional properties of Style spec
     //       see https://docs.mapbox.com/style-spec/reference/root
 }
@@ -91,10 +119,13 @@ impl FromWasmAbi for Style {
 
 pub type Sources = HashMap<String, Source>;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Source {
     pub r#type: String,
-    pub tiles: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tiles: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub url: Option<String>,
 }
 
 impl From<Source> for JsValue {
@@ -125,8 +156,6 @@ impl FromWasmAbi for Source {
     }
 }
 
-use crate::layer::Layer;
-
 #[derive(Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct StyleOptions {
@@ -142,14 +171,14 @@ impl StyleOptions {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MapboxSdkSupport {
     pub js: Option<String>,
     pub android: Option<String>,
     pub ios: Option<String>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Metadata {
     #[serde(rename = "mapbox:origin")]
     pub mapbox_origin: Option<String>,
@@ -159,31 +188,4 @@ pub struct Metadata {
     pub mapbox_type: Option<String>,
     #[serde(rename = "mapbox:sdk-support")]
     pub mapbox_sdk_support: Option<MapboxSdkSupport>,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct Source {
-    pub url: Option<String>,
-    #[serde(rename = "type")]
-    pub source_type: Option<String>,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct Style {
-    pub version: Option<u32>,
-    pub name: Option<String>,
-    pub metadata: Option<Metadata>,
-    pub center: Option<Vec<f64>>,
-    pub zoom: Option<f64>,
-    pub bearing: Option<f64>,
-    pub pitch: Option<f64>,
-    pub sprite: Option<String>,
-    pub glyphs: Option<String>,
-    pub layers: Option<Vec<Layer>>,
-    pub created: Option<String>,
-    pub id: Option<String>,
-    pub modified: Option<String>,
-    pub owner: Option<String>,
-    pub visibility: Option<String>,
-    pub draft: Option<bool>,
 }

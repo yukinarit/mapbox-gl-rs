@@ -1,6 +1,6 @@
 use futures::channel::oneshot;
 use log::*;
-use mapboxgl::{event, LngLat, Map, MapEventListener, MapOptions, StyleOptions, StyleOrRef};
+use mapboxgl::{event, LngLat, Map, MapEventListener, MapOptions, StyleOptions};
 use std::{cell::RefCell, rc::Rc};
 use web_sys::HtmlInputElement;
 use yew::prelude::*;
