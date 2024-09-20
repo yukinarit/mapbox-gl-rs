@@ -74,11 +74,18 @@ pub struct GetLayer {
 #[serde(rename_all = "camelCase", tag = "type")]
 pub enum Layer {
     Custom(CustomLayer),
-    Fill(FillLayer),
     Background(BackgroundLayer),
+    Fill(FillLayer),
     Line(LineLayer),
     Symbol(SymbolLayer),
+    Raster(RasterLayer),
+    RasterParticle(RasterParticleLayer),
     Circle(CircleLayer),
+    FillExtrusion(FillExtrusionLayer),
+    Heatmap(HeatmapLayer),
+    Hillshade(HillshadeLayer),
+    Sky(SkyLayer),
+    Model(ModelLayer),
 }
 
 pub trait IntoLayer {
@@ -87,7 +94,7 @@ pub trait IntoLayer {
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct LayerBase {
+pub struct CustomLayer {
     pub id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub maxzoom: Option<f64>,
@@ -101,27 +108,6 @@ pub struct LayerBase {
     pub source_layer: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub slot: Option<String>,
-}
-
-impl LayerBase {
-    pub fn new(id: impl Into<String>, source: impl Into<String>) -> LayerBase {
-        LayerBase {
-            id: id.into(),
-            maxzoom: None,
-            minzoom: None,
-            source: source.into(),
-            filter: None,
-            source_layer: None,
-            slot: None,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CustomLayer {
-    #[serde(flatten)]
-    pub inner: LayerBase,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rendering_mode: Option<String>,
     #[serde(with = "serde_wasm_bindgen::preserve")]
@@ -153,7 +139,13 @@ impl CustomLayer {
     {
         let render = Closure::<dyn Fn(JsValue, JsValue)>::new(render);
         CustomLayer {
-            inner: LayerBase::new(id, source),
+            id: id.into(),
+            maxzoom: None,
+            minzoom: None,
+            source: source.into(),
+            filter: None,
+            source_layer: None,
+            slot: None,
             rendering_mode: None,
             // Use no-ops for the optional functions
             on_add: make_wasm_closure(|_1, _2| {}),
@@ -195,72 +187,6 @@ impl<T: fmt::Debug> fmt::Display for Expression<T> {
             Expression::Enum(e) => write!(f, "{:?}", e),
         }
     }
-}
-
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct FillLayer {
-    #[serde(flatten)]
-    pub inner: LayerBase,
-    #[serde(default)]
-    pub layout: FillLayout,
-    #[serde(default)]
-    pub paint: FillPaint,
-}
-
-impl IntoLayer for FillLayer {
-    fn into_layer(self) -> Layer {
-        Layer::Fill(self)
-    }
-}
-
-impl FillLayer {
-    pub fn new(id: impl Into<String>, source: impl Into<String>) -> FillLayer {
-        FillLayer {
-            inner: LayerBase::new(id, source),
-            layout: FillLayout::default(),
-            paint: FillPaint::default(),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[serde(rename_all = "kebab-case")]
-pub enum TranslateAnchor {
-    #[default]
-    Map,
-    Viewport,
-}
-impl EnumMarker for TranslateAnchor {}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[serde(rename_all = "kebab-case")]
-pub struct FillPaint {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub fill_antialias: Option<Expression<()>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub fill_color: Option<Expression<()>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub fill_emissive_strength: Option<Expression<()>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub fill_opacity: Option<Expression<()>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub fill_outline_color: Option<Expression<()>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub fill_pattern: Option<Expression<()>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub fill_translate: Option<Expression<()>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub fill_translate_anchor: Option<Expression<TranslateAnchor>>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[serde(rename_all = "kebab-case")]
-pub struct FillLayout {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub fill_sort_key: Option<u32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub visibility: Option<Visibility>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -311,9 +237,103 @@ pub struct BackgroundLayout {
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct FillLayer {
+    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub maxzoom: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub minzoom: Option<f64>,
+    pub source: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub filter: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "source-layer")]
+    pub source_layer: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub slot: Option<String>,
+    #[serde(default)]
+    pub layout: FillLayout,
+    #[serde(default)]
+    pub paint: FillPaint,
+}
+
+impl IntoLayer for FillLayer {
+    fn into_layer(self) -> Layer {
+        Layer::Fill(self)
+    }
+}
+
+impl FillLayer {
+    pub fn new(id: impl Into<String>, source: impl Into<String>) -> FillLayer {
+        FillLayer {
+            id: id.into(),
+            maxzoom: None,
+            minzoom: None,
+            source: source.into(),
+            filter: None,
+            source_layer: None,
+            slot: None,
+            layout: FillLayout::default(),
+            paint: FillPaint::default(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "kebab-case")]
+pub enum TranslateAnchor {
+    #[default]
+    Map,
+    Viewport,
+}
+impl EnumMarker for TranslateAnchor {}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "kebab-case")]
+pub struct FillPaint {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill_antialias: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill_color: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill_emissive_strength: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill_opacity: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill_outline_color: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill_pattern: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill_translate: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill_translate_anchor: Option<Expression<TranslateAnchor>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "kebab-case")]
+pub struct FillLayout {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill_sort_key: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub visibility: Option<Visibility>,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct LineLayer {
-    #[serde(flatten)]
-    pub inner: LayerBase,
+    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub maxzoom: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub minzoom: Option<f64>,
+    pub source: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub filter: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "source-layer")]
+    pub source_layer: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub slot: Option<String>,
     #[serde(default)]
     pub layout: LineLayout,
     #[serde(default)]
@@ -329,7 +349,13 @@ impl IntoLayer for LineLayer {
 impl LineLayer {
     pub fn new(id: impl Into<String>, source: impl Into<String>) -> LineLayer {
         LineLayer {
-            inner: LayerBase::new(id, source),
+            id: id.into(),
+            maxzoom: None,
+            minzoom: None,
+            source: source.into(),
+            filter: None,
+            source_layer: None,
+            slot: None,
             layout: LineLayout::default(),
             paint: LinePaint::default(),
         }
@@ -408,8 +434,19 @@ pub struct LineLayout {
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SymbolLayer {
-    #[serde(flatten)]
-    pub inner: LayerBase,
+    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub maxzoom: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub minzoom: Option<f64>,
+    pub source: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub filter: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "source-layer")]
+    pub source_layer: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub slot: Option<String>,
     #[serde(default)]
     pub layout: SymbolLayout,
     #[serde(default)]
@@ -425,7 +462,13 @@ impl IntoLayer for SymbolLayer {
 impl SymbolLayer {
     pub fn new(id: impl Into<String>, source: impl Into<String>) -> SymbolLayer {
         SymbolLayer {
-            inner: LayerBase::new(id, source),
+            id: id.into(),
+            maxzoom: None,
+            minzoom: None,
+            source: source.into(),
+            filter: None,
+            source_layer: None,
+            slot: None,
             layout: SymbolLayout::default(),
             paint: SymbolPaint::default(),
         }
@@ -650,9 +693,174 @@ pub struct SymbolLayout {
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct RasterLayer {
+    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub maxzoom: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub minzoom: Option<f64>,
+    pub source: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub filter: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "source-layer")]
+    pub source_layer: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub slot: Option<String>,
+    #[serde(default)]
+    pub layout: RasterLayout,
+    #[serde(default)]
+    pub paint: RasterPaint,
+}
+
+impl IntoLayer for RasterLayer {
+    fn into_layer(self) -> Layer {
+        Layer::Raster(self)
+    }
+}
+
+impl RasterLayer {
+    pub fn new(id: impl Into<String>, source: impl Into<String>) -> RasterLayer {
+        RasterLayer {
+            id: id.into(),
+            maxzoom: None,
+            minzoom: None,
+            source: source.into(),
+            filter: None,
+            source_layer: None,
+            slot: None,
+            layout: RasterLayout::default(),
+            paint: RasterPaint::default(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "kebab-case")]
+pub struct RasterPaint {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub raster_array_band: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub raster_brightness_max: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub raster_brightness_min: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub raster_color: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub raster_color_mix: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub raster_color_range: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub raster_contrast: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub raster_elevation: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub raster_emissive_strength: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub raster_fade_duration: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub raster_hue_rotate: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub raster_opacity: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub raster_resampling: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub raster_saturation: Option<Expression<()>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "kebab-case")]
+pub struct RasterLayout {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub visibility: Option<Visibility>,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RasterParticleLayer {
+    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub maxzoom: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub minzoom: Option<f64>,
+    pub source: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub filter: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "source-layer")]
+    pub source_layer: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub slot: Option<String>,
+    #[serde(default)]
+    pub layout: RasterParticleLayout,
+    #[serde(default)]
+    pub paint: RasterParticlePaint,
+}
+
+impl IntoLayer for RasterParticleLayer {
+    fn into_layer(self) -> Layer {
+        Layer::RasterParticle(self)
+    }
+}
+
+impl RasterParticleLayer {
+    pub fn new(id: impl Into<String>, source: impl Into<String>) -> RasterParticleLayer {
+        RasterParticleLayer {
+            id: id.into(),
+            maxzoom: None,
+            minzoom: None,
+            source: source.into(),
+            filter: None,
+            source_layer: None,
+            slot: None,
+            layout: RasterParticleLayout::default(),
+            paint: RasterParticlePaint::default(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "kebab-case")]
+pub struct RasterParticlePaint {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub raster_particle_array_band: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub raster_particle_color: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub raster_particle_count: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub raster_particle_fade_opacity_factor: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub raster_particle_max_speed: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub raster_particle_reset_rate_factor: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub raster_particle_speed_factor: Option<Expression<()>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "kebab-case")]
+pub struct RasterParticleLayout {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub visibility: Option<Visibility>,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CircleLayer {
-    #[serde(flatten)]
-    pub inner: LayerBase,
+    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub maxzoom: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub minzoom: Option<f64>,
+    pub source: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub filter: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "source-layer")]
+    pub source_layer: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub slot: Option<String>,
     #[serde(default)]
     pub layout: CircleLayout,
     #[serde(default)]
@@ -668,7 +876,13 @@ impl IntoLayer for CircleLayer {
 impl CircleLayer {
     pub fn new(id: impl Into<String>, source: impl Into<String>) -> CircleLayer {
         CircleLayer {
-            inner: LayerBase::new(id, source),
+            id: id.into(),
+            maxzoom: None,
+            minzoom: None,
+            source: source.into(),
+            filter: None,
+            source_layer: None,
+            slot: None,
             layout: CircleLayout::default(),
             paint: CirclePaint::default(),
         }
@@ -727,6 +941,412 @@ pub struct CirclePaint {
 pub struct CircleLayout {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub circle_sort_key: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub visibility: Option<Visibility>,
+}
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FillExtrusionLayer {
+    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub maxzoom: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub minzoom: Option<f64>,
+    pub source: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub filter: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "source-layer")]
+    pub source_layer: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub slot: Option<String>,
+    #[serde(default)]
+    pub layout: FillExtrusionLayout,
+    #[serde(default)]
+    pub paint: FillExtrusionPaint,
+}
+
+impl IntoLayer for FillExtrusionLayer {
+    fn into_layer(self) -> Layer {
+        Layer::FillExtrusion(self)
+    }
+}
+
+impl FillExtrusionLayer {
+    pub fn new(id: impl Into<String>, source: impl Into<String>) -> FillExtrusionLayer {
+        FillExtrusionLayer {
+            id: id.into(),
+            maxzoom: None,
+            minzoom: None,
+            source: source.into(),
+            filter: None,
+            source_layer: None,
+            slot: None,
+            layout: FillExtrusionLayout::default(),
+            paint: FillExtrusionPaint::default(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "kebab-case")]
+pub struct FillExtrusionPaint {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill_extrusion_ambient_occlusion_ground_attenuation: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill_extrusion_ambient_occlusion_ground_radius: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill_extrusion_ambient_occlusion_wall_radius: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill_extrusion_base: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill_extrusion_color: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill_extrusion_cutoff_fade_range: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill_extrusion_emissive_strength: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill_extrusion_flood_light_color: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill_extrusion_flood_light_ground_attenuation: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill_extrusion_flood_light_ground_radius: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill_extrusion_flood_light_intensity: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill_extrusion_flood_light_wall_radius: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill_extrusion_height: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill_extrusion_opacity: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill_extrusion_pattern: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill_extrusion_rounded_roof: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill_extrusion_translate: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill_extrusion_translate_anchor: Option<Expression<TranslateAnchor>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill_extrusion_vertical_gradient: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill_extrusion_vertical_scale: Option<Expression<()>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "kebab-case")]
+pub struct FillExtrusionLayout {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub visibility: Option<Visibility>,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HeatmapLayer {
+    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub maxzoom: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub minzoom: Option<f64>,
+    pub source: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub filter: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "source-layer")]
+    pub source_layer: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub slot: Option<String>,
+    #[serde(default)]
+    pub layout: HeatmapLayout,
+    #[serde(default)]
+    pub paint: HeatmapPaint,
+}
+
+impl IntoLayer for HeatmapLayer {
+    fn into_layer(self) -> Layer {
+        Layer::Heatmap(self)
+    }
+}
+
+impl HeatmapLayer {
+    pub fn new(id: impl Into<String>, source: impl Into<String>) -> HeatmapLayer {
+        HeatmapLayer {
+            id: id.into(),
+            maxzoom: None,
+            minzoom: None,
+            source: source.into(),
+            filter: None,
+            source_layer: None,
+            slot: None,
+            layout: HeatmapLayout::default(),
+            paint: HeatmapPaint::default(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "kebab-case")]
+pub struct HeatmapPaint {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub heatmap_color: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub heatmap_intensity: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub heatmap_opacity: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub heatmap_radius: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub heatmap_weight: Option<Expression<()>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "kebab-case")]
+pub struct HeatmapLayout {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub visibility: Option<Visibility>,
+}
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HillshadeLayer {
+    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub maxzoom: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub minzoom: Option<f64>,
+    pub source: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub filter: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "source-layer")]
+    pub source_layer: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub slot: Option<String>,
+    #[serde(default)]
+    pub layout: HillshadeLayout,
+    #[serde(default)]
+    pub paint: HillshadePaint,
+}
+
+impl IntoLayer for HillshadeLayer {
+    fn into_layer(self) -> Layer {
+        Layer::Hillshade(self)
+    }
+}
+
+impl HillshadeLayer {
+    pub fn new(id: impl Into<String>, source: impl Into<String>) -> HillshadeLayer {
+        HillshadeLayer {
+            id: id.into(),
+            maxzoom: None,
+            minzoom: None,
+            source: source.into(),
+            filter: None,
+            source_layer: None,
+            slot: None,
+            layout: HillshadeLayout::default(),
+            paint: HillshadePaint::default(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "kebab-case")]
+pub struct HillshadePaint {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hillshade_accent_color: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hillshade_emissive_strength: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hillshade_exaggeration: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hillshade_highlight_color: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hillshade_illumination_anchor: Option<Expression<TranslateAnchor>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hillshade_illumination_direction: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hillshade_shadow_color: Option<Expression<()>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "kebab-case")]
+pub struct HillshadeLayout {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub visibility: Option<Visibility>,
+}
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SkyLayer {
+    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub maxzoom: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub minzoom: Option<f64>,
+    pub source: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub filter: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "source-layer")]
+    pub source_layer: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub slot: Option<String>,
+    #[serde(default)]
+    pub layout: SkyLayout,
+    #[serde(default)]
+    pub paint: SkyPaint,
+}
+
+impl IntoLayer for SkyLayer {
+    fn into_layer(self) -> Layer {
+        Layer::Sky(self)
+    }
+}
+
+impl SkyLayer {
+    pub fn new(id: impl Into<String>, source: impl Into<String>) -> SkyLayer {
+        SkyLayer {
+            id: id.into(),
+            maxzoom: None,
+            minzoom: None,
+            source: source.into(),
+            filter: None,
+            source_layer: None,
+            slot: None,
+            layout: SkyLayout::default(),
+            paint: SkyPaint::default(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "kebab-case")]
+pub enum SkyType {
+    #[default]
+    Gradient,
+    Atmosphere,
+}
+impl EnumMarker for SkyType {}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "kebab-case")]
+pub struct SkyPaint {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sky_atmosphere_color: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sky_atmosphere_halo_color: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sky_atmosphere_sun: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sky_atmosphere_sun_intensity: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sky_gradient: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sky_gradient_center: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sky_gradient_radius: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sky_opacity: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sky_type: Option<Expression<SkyType>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "kebab-case")]
+pub struct SkyLayout {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub visibility: Option<Visibility>,
+}
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ModelLayer {
+    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub maxzoom: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub minzoom: Option<f64>,
+    pub source: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub filter: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "source-layer")]
+    pub source_layer: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub slot: Option<String>,
+    #[serde(default)]
+    pub layout: ModelLayout,
+    #[serde(default)]
+    pub paint: ModelPaint,
+}
+
+impl IntoLayer for ModelLayer {
+    fn into_layer(self) -> Layer {
+        Layer::Model(self)
+    }
+}
+
+impl ModelLayer {
+    pub fn new(id: impl Into<String>, source: impl Into<String>) -> ModelLayer {
+        ModelLayer {
+            id: id.into(),
+            maxzoom: None,
+            minzoom: None,
+            source: source.into(),
+            filter: None,
+            source_layer: None,
+            slot: None,
+            layout: ModelLayout::default(),
+            paint: ModelPaint::default(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "kebab-case")]
+pub enum ModelType {
+    #[default]
+    Common3d,
+    LocationIndicator,
+}
+impl EnumMarker for ModelType {}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "kebab-case")]
+pub struct ModelPaint {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model_ambient_occlusion_intensity: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model_cast_shadows: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model_color: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model_color_mix_intensity: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model_cutoff_fade_range: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model_emissive_strength: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model_height_based_emissive_strength_multiplier: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model_opacity: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model_receive_shadows: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model_rotation: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model_roughness: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model_scale: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model_translation: Option<Expression<()>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model_type: Option<Expression<ModelType>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "kebab-case")]
+pub struct ModelLayout {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model_id: Option<Expression<()>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub visibility: Option<Visibility>,
 }

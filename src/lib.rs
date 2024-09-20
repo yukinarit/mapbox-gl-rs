@@ -25,7 +25,6 @@ use std::{
     rc::{Rc, Weak},
 };
 use wasm_bindgen::{prelude::*, JsCast};
-// use web_sys::window;
 
 use callback::CallbackStore;
 pub use error::{Error, Result};
@@ -37,7 +36,7 @@ pub use layer::{BackgroundLayer, CustomLayer, Expression, FillLayer, Visibility}
 pub use marker::{Marker, MarkerEventListener, MarkerOptions};
 pub use popup::{Popup, PopupOptions};
 pub use source::GeoJsonSource;
-pub use style::{Source, Sources, Style, StyleOptions, StyleOrRef};
+pub use style::{Source, Style, StyleOptions, StyleOrRef};
 
 #[wasm_bindgen]
 #[derive(Serialize, Deserialize)]
@@ -545,13 +544,6 @@ impl Map {
 
         let inner = crate::js::Map::new(options);
 
-        // js_sys::Reflect::set(
-        //     &JsValue::from(web_sys::window().unwrap()),
-        //     &JsValue::from("mappy"),
-        //     &inner,
-        // )
-        // .unwrap();
-
         let map = Rc::new(Map {
             inner,
             handles: RefCell::new(HashMap::new()),
@@ -679,52 +671,18 @@ pub struct CameraAnimationOptions {
     #[serde(flatten)]
     animation_options: AnimationOptions,
 }
-
-#[derive(Debug)]
-struct SerdePathFindingError {
-    message: String,
-    path: Vec<String>,
-    raw_error: String,
+#[wasm_bindgen]
+extern "C" {
+    // Use `js_namespace` here to bind `console.log(..)` instead of just
+    // `log(..)`
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(s: &str);
 }
-
-impl fmt::Display for SerdePathFindingError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "Error in '{:?}': {}\n{}",
-            self.path, self.message, self.raw_error
-        )
-    }
+macro_rules! console_log {
+    // Note that this is using the `log` function imported above during
+    // `bare_bones`
+    ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
 }
-
-impl From<serde_wasm_bindgen::Error> for SerdePathFindingError {
-    fn from(error: serde_wasm_bindgen::Error) -> Self {
-        let message = format!("{}", error);
-        let search_term = "::<impl serde::de::Deserialize for ";
-        let js_error: JsValue = error.into();
-        let mut path = vec![];
-        let mut raw_error = message.clone();
-
-        if let Some(e) = js_error.dyn_ref::<js_sys::Error>() {
-            raw_error = format!("{:?}", e);
-            for line in raw_error.lines() {
-                if let Some(start) = line.find(search_term) {
-                    let rest = &line[start + search_term.len()..];
-                    if let Some(end) = rest.find('>') {
-                        path.push(rest[..end].into())
-                    }
-                }
-            }
-        }
-        path = path.into_iter().rev().collect();
-        SerdePathFindingError {
-            message,
-            path,
-            raw_error,
-        }
-    }
-}
-
 impl Map {
     pub fn get_container(&self) -> web_sys::HtmlElement {
         self.inner.getContainer()
@@ -803,11 +761,6 @@ impl Map {
 
     pub fn get_style(&self) -> crate::style::Style {
         serde_wasm_bindgen::from_value(self.inner.getStyle())
-            // .map_err(|e| {
-            //     let ee: SerdePathFindingError = e.into();
-            //     log!("hmm: {:?}", ee);
-            //     ee
-            // })
             .expect_throw("Could not deserialize map.getStyle()")
     }
 
@@ -919,23 +872,6 @@ impl Map {
         serde_wasm_bindgen::from_value(layer).map_err(Error::from)
     }
 
-    // #[wasm_bindgen(method)]
-    // pub fn setLayerZoomRange(this: &Map, id: String, min_zoom: f64, max_zoom: f64) -> JsValue;
-
-    // #[wasm_bindgen(method)]
-    // pub fn setFilter(this: &Map, id: String, filter: JsValue, options: JsValue) -> JsValue;
-
-    // #[wasm_bindgen(method)]
-    // pub fn getFilter(this: &Map, id: String) -> JsValue;
-
-    // #[wasm_bindgen(method)]
-    // pub fn setPaintProperty(
-    //     this: &Map,
-    //     id: String,
-    //     name: String,
-    //     value: JsValue,
-    //     options: JsValue,
-    // ) -> JsValue;
     pub fn get_paint_property(
         &self,
         id: impl Into<String>,
@@ -944,21 +880,6 @@ impl Map {
         let expr = self.inner.getPaintProperty(id.into(), name.into());
         serde_wasm_bindgen::from_value(expr).map_err(Error::from)
     }
-
-    // #[wasm_bindgen(method)]
-    // pub fn getPaintProperty(this: &Map, id: String, name: String) -> JsValue;
-
-    // #[wasm_bindgen(method)]
-    // pub fn setLayoutProperty(
-    //     this: &Map,
-    //     id: String,
-    //     name: String,
-    //     value: JsValue,
-    //     options: JsValue,
-    // ) -> JsValue;
-
-    // #[wasm_bindgen(method)]
-    // pub fn getLayoutProperty(this: &Map, id: String, name: String) -> JsValue;
 
     pub fn query_rendered_features<G: IntoQueryGeometry>(
         &self,
