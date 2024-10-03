@@ -6,7 +6,7 @@ members = [
 
 [package]
 name = "mapboxgl"
-version = "0.5.0"
+version = "0.6.0"
 edition = "2021"
 description = "Unofficial Rust binding for mapbox-gl-js"
 readme = "README.md"
