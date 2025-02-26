@@ -256,6 +256,8 @@ pub struct MapOptions {
     test_mode: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     zoom: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    interactive: Option<bool>,
 }
 
 #[wasm_bindgen]
@@ -284,6 +286,7 @@ impl MapOptions {
             scroll_zoom: None,
             test_mode: None,
             zoom: None,
+            interactive: None,
         }
     }
 
@@ -309,6 +312,11 @@ impl MapOptions {
 
     pub fn zoom(mut self, zoom: f64) -> MapOptions {
         self.zoom = Some(zoom);
+        self
+    }
+
+    pub fn interactive(mut self, interactive: bool) -> MapOptions {
+        self.interactive = Some(interactive);
         self
     }
 
