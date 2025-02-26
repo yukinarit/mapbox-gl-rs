@@ -1,2 +1,79 @@
-target
-Cargo.lock
+# -------------------------------------------------------------------------------------------------
+# Rust
+# -------------------------------------------------------------------------------------------------
+# Generated artifacts
+/target/
+/**/*.rs.bk
+.direnv
+
+# If using Cargo workspaces, ignore lock files at the workspace root, but not sub-crates
+# (uncomment if your project is a single package without multiple crates)
+# /Cargo.lock
+
+# Build scripts
+/build/
+.cache
+/**/.cache
+
+# By default, build scripts output to OUT_DIR, which we don't want in version control
+# (But if you have custom scripts or build output to store, adjust as needed)
+
+# -------------------------------------------------------------------------------------------------
+# IDE / Editor
+# -------------------------------------------------------------------------------------------------
+# Visual Studio Code
+/.vscode/
+/.vscode/
+/*.code-workspace
+
+# IntelliJ IDEA / CLion / Rider
+/.idea/
+/.idea/
+/*.iml
+/.idea_modules/
+/*.ipr
+/*.iws
+out/
+
+# Eclipse
+/.settings/
+/.project
+/.metadata
+/.recommenders
+
+# JetBrains cache
+/.cache/
+
+# Code blocks
+/*.cbp
+/*.depend
+/*.layout
+
+# Rust specific editor backups
+*.swp
+*.swo
+
+# -------------------------------------------------------------------------------------------------
+# Operating System
+# -------------------------------------------------------------------------------------------------
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# -------------------------------------------------------------------------------------------------
+# Misc
+# -------------------------------------------------------------------------------------------------
+# Node modules (if any JS or front-end build present)
+node_modules/
+
+# End of file
+/public/cache/
