@@ -20,7 +20,7 @@ impl MapEventListener for Listener {
         let popup = Popup::new(latlng, PopupOptions::new());
         popup.set_html("<h1>Hello</h1>");
         popup.add_to(&map);
-        debug!("clicked {:?}", e);
+        debug!("clicked {e:?}");
     }
 }
 
@@ -65,9 +65,9 @@ fn app() -> Html {
 }
 
 pub fn create_map() -> Rc<Map> {
-    let token = std::env!("MAPBOX_TOKEN");
+    let token = std::env::var("MAPBOX_TOKEN").unwrap_or_else(|_| "your_token_here".to_string());
 
-    let opts = MapOptions::new(token.into(), "map".into())
+    let opts = MapOptions::new(token, "map".into())
         .center(LngLat::new(139.7647863, 35.6812373))
         .zoom(15.0);
 

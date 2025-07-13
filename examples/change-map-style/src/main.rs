@@ -46,9 +46,9 @@ fn use_map() -> Rc<RefCell<Option<Rc<Map>>>> {
 }
 
 pub fn create_map() -> Rc<Map> {
-    let token = std::env!("MAPBOX_TOKEN");
+    let token = std::env::var("MAPBOX_TOKEN").unwrap_or_else(|_| "your_token_here".to_string());
 
-    let opts = MapOptions::new(token.into(), "map".into())
+    let opts = MapOptions::new(token, "map".into())
         .center(LngLat::new(-2.81361, 36.77271))
         .zoom(13.0)
         .style_ref("mapbox://styles/mapbox/satellite-streets-v12".into());
@@ -61,7 +61,7 @@ fn app() -> Html {
     let on_click = {
         Callback::from(move |e: Event| {
             let value = e.target_dyn_into::<HtmlInputElement>().unwrap().value();
-            let style = format!("mapbox://styles/mapbox/{}", value);
+            let style = format!("mapbox://styles/mapbox/{value}");
             map.borrow_mut()
                 .as_ref()
                 .unwrap()

@@ -1,7 +1,7 @@
 [workspace]
 members = [
     ".",          # Include the library itself
-    "examples/*"  # Include all projects in the examples directory
+    "examples/*"
 ]
 
 [package]

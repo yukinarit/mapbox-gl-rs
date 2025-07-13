@@ -84,7 +84,7 @@ fn app() -> Html {
         use_effect_with_deps(
             move |(route, second)| {
                 if let Err(e) = update(map, route, second) {
-                    warn!("{:#?}", e);
+                    warn!("{e:#?}");
                 }
                 || ()
             },
@@ -97,7 +97,7 @@ fn app() -> Html {
             |_| {
                 wasm_bindgen_futures::spawn_local(async move {
                     let json = fetch().await.unwrap();
-                    info!("route geojson was loaded: {:?}", json);
+                    info!("route geojson was loaded: {json:?}");
                     route.set(Some(json));
                 });
                 || ()
@@ -112,9 +112,9 @@ fn app() -> Html {
 }
 
 async fn fetch() -> anyhow::Result<geojson::FeatureCollection> {
-    let mut opts = RequestInit::new();
-    opts.method("GET");
-    opts.mode(RequestMode::Cors);
+    let opts = RequestInit::new();
+    opts.set_method("GET");
+    opts.set_mode(RequestMode::Cors);
     let req = Request::new_with_str_and_init(
         "https://docs.mapbox.com/mapbox-gl-js/assets/hike.geojson",
         &opts,
@@ -142,9 +142,9 @@ impl MapEventListener for Listener {
 }
 
 pub fn create_map() -> Rc<Map> {
-    let token = std::env!("MAPBOX_TOKEN");
+    let token = std::env::var("MAPBOX_TOKEN").unwrap_or_else(|_| "your_token_here".to_string());
 
-    let opts = MapOptions::new(token.into(), "map".into())
+    let opts = MapOptions::new(token, "map".into())
         .center(LngLat::new(-122.019807, 45.632433))
         .zoom(15.0);
     mapboxgl::Map::new(opts).unwrap()
@@ -165,7 +165,7 @@ fn update(map: MapRef, route: &RouteState, second: &IntervalState) -> anyhow::Re
                 coordinates.last().unwrap()[0],
                 coordinates.last().unwrap()[1],
             );
-            info!("latlng = {:?}", latlng);
+            info!("latlng = {latlng:?}");
             update_data(source, path);
             map.pan_to(latlng);
         }
@@ -193,7 +193,7 @@ fn add_data(map: &Map, json: geojson::FeatureCollection) -> anyhow::Result<()> {
 
 fn update_data(mut source: mapboxgl::GeoJsonSource, json: geojson::FeatureCollection) {
     if let Err(e) = source.set_data(geojson::GeoJson::FeatureCollection(json)) {
-        error!("Failed to update data: {:?}", e);
+        error!("Failed to update data: {e:?}");
     }
 }
 

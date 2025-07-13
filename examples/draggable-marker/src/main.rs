@@ -74,9 +74,9 @@ fn use_map() -> Rc<RefCell<Option<Rc<Map>>>> {
 }
 
 pub fn create_map() -> Rc<Map> {
-    let token = std::env!("MAPBOX_TOKEN");
+    let token = std::env::var("MAPBOX_TOKEN").unwrap_or_else(|_| "your_token_here".to_string());
 
-    let opts = MapOptions::new(token.into(), "map".into())
+    let opts = MapOptions::new(token, "map".into())
         .center(LngLat::new(0.0, 0.0))
         .zoom(2.0)
         .style_ref("mapbox://styles/mapbox/streets-v12".into());
