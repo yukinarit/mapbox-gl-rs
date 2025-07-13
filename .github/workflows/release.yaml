@@ -4,18 +4,18 @@ on:
   release:
     types: [released]
 
+env:
+  CARGO_TERM_COLOR: always
+
 jobs:
   publish:
     name: publish
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
       - name: Login
-        uses: actions-rs/cargo@v1
-        with:
-          command: login
-          args: ${{ secrets.CRATES_IO_API_TOKEN }}
+        run: cargo login ${{ secrets.CRATES_IO_API_TOKEN }}
       - name: Publish
-        uses: actions-rs/cargo@v1
-        with:
-          command: publish
+        run: cargo publish
