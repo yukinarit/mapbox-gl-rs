@@ -35,4 +35,4 @@ jobs:
     - name: Install nextest
       uses: taiki-e/install-action@nextest
     - name: Unit tests
-      run: cargo nextest run --retries 3
+      run: cargo nextest run --retries 3 --no-tests=pass

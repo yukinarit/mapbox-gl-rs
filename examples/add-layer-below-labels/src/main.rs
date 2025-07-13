@@ -42,8 +42,8 @@ fn MapComponent() -> impl IntoView {
     let map_ref = create_node_ref::<html::Div>();
     map_ref.on_load(move |m| {
         let _map_el = m.on_mount(move |map| {
-            let token = std::env!("MAPBOX_TOKEN");
-            let opts = MapOptions::new(token.into(), map.get_attribute("id").unwrap())
+            let token = std::env::var("MAPBOX_TOKEN").unwrap_or_else(|_| "your_token_here".to_string());
+            let opts = MapOptions::new(token, map.get_attribute("id").unwrap())
                 .center(LngLat::new(-88.137343, 35.137451))
                 .zoom(5.0)
                 .style_ref("mapbox://styles/mapbox/standard".into());

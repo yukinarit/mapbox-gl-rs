@@ -72,6 +72,7 @@ pub struct GetLayer {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
+#[allow(clippy::large_enum_variant)]
 pub enum Layer {
     Custom(CustomLayer),
     Background(BackgroundLayer),
@@ -171,20 +172,20 @@ impl CustomLayer {
 impl<T: fmt::Debug> fmt::Display for Expression<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Expression::String(s) => write!(f, "\"{}\"", s),
-            Expression::Number(n) => write!(f, "{}", n),
-            Expression::Bool(b) => write!(f, "{}", b),
+            Expression::String(s) => write!(f, "\"{s}\""),
+            Expression::Number(n) => write!(f, "{n}"),
+            Expression::Bool(b) => write!(f, "{b}"),
             Expression::List(list) => {
                 write!(f, "[")?;
                 for (index, item) in list.iter().enumerate() {
                     if index > 0 {
                         write!(f, ", ")?;
                     }
-                    write!(f, "{}", item)?;
+                    write!(f, "{item}")?;
                 }
                 write!(f, "]")
             }
-            Expression::Enum(e) => write!(f, "{:?}", e),
+            Expression::Enum(e) => write!(f, "{e:?}"),
         }
     }
 }

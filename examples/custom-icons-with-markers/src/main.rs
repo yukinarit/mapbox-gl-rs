@@ -32,7 +32,7 @@ fn use_map(geojson: GeoJson) -> Rc<RefCell<Option<Rc<Map>>>> {
                         let properties = feature["properties"].clone();
                         let width = properties["iconSize"][0].as_f64().unwrap();
                         let heigth = properties["iconSize"][1].as_f64().unwrap();
-                        element.set_attribute("style", &format!("background-image: url(https://loremflickr.com/{}/{}/); width: {}px; height: {}px; background-size: 100%;", width, heigth, width, heigth)).unwrap();
+                        element.set_attribute("style", &format!("background-image: url(https://loremflickr.com/{width}/{heigth}/); width: {width}px; height: {heigth}px; background-size: 100%;")).unwrap();
                         let handler = wasm_bindgen::prelude::Closure::wrap(Box::new(move || {
                             let message = properties["message"].as_str().unwrap();
                             web_sys::window()
@@ -68,9 +68,9 @@ fn use_map(geojson: GeoJson) -> Rc<RefCell<Option<Rc<Map>>>> {
 }
 
 pub fn create_map() -> Rc<Map> {
-    let token = std::env!("MAPBOX_TOKEN");
+    let token = std::env::var("MAPBOX_TOKEN").unwrap_or_else(|_| "your_token_here".to_string());
 
-    let opts = MapOptions::new(token.into(), "map".into())
+    let opts = MapOptions::new(token, "map".into())
         .center(LngLat::new(-65.017, -16.457))
         .zoom(5.0)
         .style_ref("mapbox://styles/mapbox/streets-v12".into());

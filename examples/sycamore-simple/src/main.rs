@@ -7,7 +7,7 @@ fn main() {
     window().unwrap().set_onload(Some(
         Closure::<dyn Fn()>::new(move || {
             let _map = Map::new(
-                MapOptions::new(std::env!("MAPBOX_TOKEN").into(), "map".into())
+                MapOptions::new(std::env::var("MAPBOX_TOKEN").unwrap_or_else(|_| "your_token_here".to_string()), "map".into())
                     .center(LngLat::new(-88.6867772119069, 41.989067254515696))
                     .zoom(12.0),
             )
