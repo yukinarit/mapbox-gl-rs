@@ -8,6 +8,7 @@ on:
 
 env:
   MAPBOX_TOKEN: token
+  CARGO_TERM_COLOR: always
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -20,12 +21,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Set up Rust toolchain
-      run: |
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- \
-          --default-toolchain stable \
-          --profile minimal \
-          --component rustfmt clippy \
-          -y
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: rustfmt, clippy
     - name: Build crate and examples
       run: |
         cargo build --workspace --all-targets --all-features
