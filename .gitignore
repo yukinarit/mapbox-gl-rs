@@ -8,7 +8,7 @@
 
 # If using Cargo workspaces, ignore lock files at the workspace root, but not sub-crates
 # (uncomment if your project is a single package without multiple crates)
-# /Cargo.lock
+/Cargo.lock
 
 # Build scripts
 /build/

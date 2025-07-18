@@ -5,4 +5,4 @@ edition = "2021"
 
 [dependencies]
 mapboxgl = { path = "../../" }
-leptos = { version = "0.6.11", features = ["csr"] }
+leptos = { version = "0.8.3", features = ["csr"] }
